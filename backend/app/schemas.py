@@ -162,6 +162,14 @@ class LeaveRequestPublic(BaseModel):
     created_at: str
 
 
+class BalanceResponse(BaseModel):
+    year: int
+    allocated_days: int
+    adjustment_days: int
+    approved_annual_days: int
+    remaining_days: int
+
+
 class StubResponse(BaseModel):
     """What a generated route returns until someone implements it.
 

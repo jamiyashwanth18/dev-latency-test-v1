@@ -42,7 +42,16 @@ interface LeaveRequest {
   created_at: string;
 }
 
+interface Balance {
+  year: number;
+  allocated_days: number;
+  adjustment_days: number;
+  approved_annual_days: number;
+  remaining_days: number;
+}
+
 type ListState = "loading" | "error" | "ready";
+type BalanceState = "loading" | "error" | "ready";
 
 type FormState = {
   start_date: string;
@@ -86,6 +95,10 @@ export default function Screen() {
   const [listError, setListError] = React.useState("");
   const [requests, setRequests] = React.useState<LeaveRequest[]>([]);
 
+  const [balanceState, setBalanceState] = React.useState<BalanceState>("loading");
+  const [balanceError, setBalanceError] = React.useState("");
+  const [balance, setBalance] = React.useState<Balance | null>(null);
+
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormState, string>>>({});
   const [banner, setBanner] = React.useState<Banner>(null);
@@ -109,9 +122,28 @@ export default function Screen() {
       });
   }, []);
 
+  const loadBalance = React.useCallback(() => {
+    setBalanceState("loading");
+    setBalanceError("");
+    apiFetch<Balance>("/balances/mine")
+      .then((data) => {
+        setBalance(data);
+        setBalanceState("ready");
+      })
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 401) {
+          redirectToSignIn();
+          return;
+        }
+        setBalanceError(err instanceof Error ? err.message : "Could not load your balance.");
+        setBalanceState("error");
+      });
+  }, []);
+
   React.useEffect(() => {
     loadRequests();
-  }, [loadRequests]);
+    loadBalance();
+  }, [loadRequests, loadBalance]);
 
   function setField(name: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -267,6 +299,48 @@ export default function Screen() {
           </p>
         </header>
 
+        <section aria-labelledby="balance-heading" className="mb-12">
+          <h2
+            id="balance-heading"
+            className="text-2xl mb-4"
+            style={{ fontFamily: brand.fontHeading }}
+          >
+            Annual balance
+          </h2>
+          {balanceState === "loading" ? (
+            <p role="status">Loading your balance…</p>
+          ) : balanceState === "error" ? (
+            <Empty
+              title="Could not load your balance"
+              description={balanceError}
+              action={
+                <Button type="button" onClick={loadBalance}>
+                  Try again
+                </Button>
+              }
+            />
+          ) : balance ? (
+            <Card style={hardBox} className="p-6 sm:p-8">
+              <CardContent className="p-0">
+                <p className="text-xs uppercase tracking-wide" style={{ color: neutral }}>
+                  Balance for {balance.year}
+                </p>
+                <p className="mt-2 text-3xl" style={{ fontFamily: brand.fontHeading }}>
+                  {balance.remaining_days} of {balance.allocated_days}
+                </p>
+                <p className="mt-2 text-sm" style={{ color: neutral }}>
+                  {balance.adjustment_days !== 0
+                    ? `Includes an HR adjustment of ${
+                        balance.adjustment_days > 0 ? "+" : ""
+                      }${balance.adjustment_days} days. `
+                    : ""}
+                  Sick leave is tracked separately and never reduces this figure.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+        </section>
+
         <form onSubmit={handleSubmit} noValidate className="mb-12">
           <Card style={hardBox} className="p-6 sm:p-8">
             <CardContent className="p-0">
@@ -395,6 +469,7 @@ export default function Screen() {
                   <TH scope="col">Working days</TH>
                   <TH scope="col">Status</TH>
                   <TH scope="col">Manager comment</TH>
+                  <TH scope="col">Overlap</TH>
                 </TR>
               </THead>
               <TBody>
@@ -404,13 +479,30 @@ export default function Screen() {
                       {r.start_date} – {r.end_date}
                     </TD>
                     <TD>
-                      <Badge>{r.leave_type === "annual" ? "Annual" : "Sick"}</Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge>{r.leave_type === "annual" ? "Annual" : "Sick"}</Badge>
+                        {r.leave_type === "sick" && r.status === "approved" ? (
+                          <span className="text-xs" style={{ color: neutral }}>
+                            Excluded from annual balance
+                          </span>
+                        ) : null}
+                      </div>
                     </TD>
                     <TD>{r.working_days}</TD>
                     <TD>
                       <StatusBadge status={r.status} />
                     </TD>
                     <TD>{r.manager_comment || <span style={{ color: neutral }}>—</span>}</TD>
+                    <TD>
+                      {r.has_overlap ? (
+                        <Badge variant="warning" className="inline-flex items-center gap-1">
+                          <AlertCircle aria-hidden="true" className="h-3 w-3" />
+                          Overlap
+                        </Badge>
+                      ) : (
+                        <span style={{ color: neutral }}>—</span>
+                      )}
+                    </TD>
                   </TR>
                 ))}
               </TBody>
