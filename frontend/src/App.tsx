@@ -105,7 +105,7 @@ export default function App() {
       }
     }
 
-    restore();
+    void restore();
     return () => {
       cancelled = true;
     };

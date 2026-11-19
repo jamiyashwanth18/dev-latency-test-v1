@@ -93,8 +93,15 @@ def update_user(
         manager_id_value = data["manager_id"]
         if manager_id_value is not None:
             manager_id = _parse_uuid_or_404(manager_id_value, detail="Manager not found")
-            if db.get(User, manager_id) is None:
+            manager = db.get(User, manager_id)
+            if manager is None:
                 raise HTTPException(status_code=404, detail="Manager not found")
+            if manager_id == user.id:
+                raise HTTPException(status_code=422, detail="A user may not be their own manager")
+            if manager.manager_id == user.id:
+                raise HTTPException(
+                    status_code=422, detail="Two users may not be each other's manager"
+                )
             user.manager_id = manager_id
         else:
             user.manager_id = None

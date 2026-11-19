@@ -2,6 +2,12 @@
 
 Every test creates its own users with a uuid4 suffix and asserts only on rows it
 created, since the suite shares one database and never truncates between tests.
+
+Every user other than the bootstrap HR/Admin is created through the real
+POST /admin/users endpoint (and, for a deactivated user, the real PATCH), not by
+writing rows into the ORM session directly, so a bug in that endpoint's own
+authorization or validation would show up in these tests rather than being
+invisible to them.
 """
 
 import uuid
@@ -16,18 +22,13 @@ from app.models import AuditLogEntry, Role, User
 _MONDAY = date(2026, 11, 23)
 
 
-def _create_user(
-    db_session: Session,
-    *,
-    role: str = Role.EMPLOYEE.value,
-    manager_id: uuid.UUID | None = None,
-    is_active: bool = True,
-) -> User:
+def _bootstrap_hr_admin(db_session: Session) -> User:
+    """The one user this file cannot create through the API: POST /admin/users
+    itself needs an HR/Admin bearer already, and this test database has none
+    seeded (BOOTSTRAP_ADMIN_EMAIL is unset here). Every other user below is
+    created through the real admin API using this user's token."""
     user = User(
-        full_name=f"Test User {uuid.uuid4()}",
-        role=role,
-        manager_id=manager_id,
-        is_active=is_active,
+        full_name=f"Bootstrap Admin {uuid.uuid4()}", role=Role.HR_ADMIN.value, is_active=True
     )
     db_session.add(user)
     db_session.commit()
@@ -35,16 +36,48 @@ def _create_user(
     return user
 
 
-def _headers(client: TestClient, user: User) -> dict:
-    response = client.post("/sessions", json={"user_id": str(user.id)})
+def _headers(client: TestClient, user: User | dict) -> dict:
+    """Signs in as the given user -- an ORM row (only the bootstrap admin) or the
+    JSON body POST /admin/users returned -- and returns bearer headers."""
+    user_id = user["id"] if isinstance(user, dict) else str(user.id)
+    response = client.post("/sessions", json={"user_id": user_id})
     assert response.status_code == 201
     return {"Authorization": f"Bearer {response.json()['token']}"}
+
+
+def _admin_headers(client: TestClient, db_session: Session) -> dict:
+    return _headers(client, _bootstrap_hr_admin(db_session))
+
+
+def _create_user(
+    client: TestClient,
+    admin_headers: dict,
+    *,
+    role: str = Role.EMPLOYEE.value,
+    manager_id: str | None = None,
+    is_active: bool = True,
+) -> dict:
+    """Creates a user through the real admin API and returns the JSON body."""
+    payload: dict = {"full_name": f"Test User {uuid.uuid4()}", "role": role}
+    if manager_id is not None:
+        payload["manager_id"] = manager_id
+    response = client.post("/admin/users", json=payload, headers=admin_headers)
+    assert response.status_code == 201, response.text
+    body = response.json()
+    if not is_active:
+        patch = client.patch(
+            f"/admin/users/{body['id']}", json={"is_active": False}, headers=admin_headers
+        )
+        assert patch.status_code == 200, patch.text
+        body = patch.json()
+    return body
 
 
 def test_ac009_valid_submission_returns_201_pending_and_appears_in_mine(
     client: TestClient, db_session: Session
 ) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -63,7 +96,7 @@ def test_ac009_valid_submission_returns_201_pending_and_appears_in_mine(
     assert body["status"] == "pending"
     assert body["working_days"] == 2
     assert body["reason"] == "Family trip"
-    assert body["employee_id"] == str(employee.id)
+    assert body["employee_id"] == employee["id"]
 
     mine = client.get("/leave-requests/mine", headers=headers)
     assert mine.status_code == 200
@@ -73,7 +106,8 @@ def test_ac009_valid_submission_returns_201_pending_and_appears_in_mine(
 def test_ac010_missing_reason_returns_422_and_creates_no_row(
     client: TestClient, db_session: Session
 ) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -93,7 +127,8 @@ def test_ac010_missing_reason_returns_422_and_creates_no_row(
 
 
 def test_ac010_whitespace_reason_returns_422(client: TestClient, db_session: Session) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -111,7 +146,8 @@ def test_ac010_whitespace_reason_returns_422(client: TestClient, db_session: Ses
 
 
 def test_ac010_unknown_leave_type_returns_422(client: TestClient, db_session: Session) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -131,7 +167,8 @@ def test_ac010_unknown_leave_type_returns_422(client: TestClient, db_session: Se
 def test_ac010_end_date_before_start_date_returns_422(
     client: TestClient, db_session: Session
 ) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -149,7 +186,8 @@ def test_ac010_end_date_before_start_date_returns_422(
 
 
 def test_ac011_weekend_only_range_returns_422(client: TestClient, db_session: Session) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
     saturday = _MONDAY - timedelta(days=2)
     sunday = _MONDAY - timedelta(days=1)
@@ -185,7 +223,8 @@ def test_unauthenticated_post_returns_401(client: TestClient) -> None:
 def test_submission_writes_exactly_one_audit_log_row(
     client: TestClient, db_session: Session
 ) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.post(
@@ -206,7 +245,7 @@ def test_submission_writes_exactly_one_audit_log_row(
         .all()
     )
     assert len(rows) == 1
-    assert rows[0].actor_user_id == employee.id
+    assert rows[0].actor_user_id == uuid.UUID(employee["id"])
     assert rows[0].action_type
     assert isinstance(rows[0].detail, dict)
 
@@ -214,7 +253,8 @@ def test_submission_writes_exactly_one_audit_log_row(
 def test_has_overlap_true_when_pending_request_intersects(
     client: TestClient, db_session: Session
 ) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
     first = client.post(
         "/leave-requests",
@@ -242,7 +282,8 @@ def test_has_overlap_true_when_pending_request_intersects(
 
 
 def test_mine_orders_created_at_desc_then_id_desc(client: TestClient, db_session: Session) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
     first = client.post(
         "/leave-requests",
@@ -271,7 +312,8 @@ def test_mine_orders_created_at_desc_then_id_desc(client: TestClient, db_session
 
 
 def test_pending_returns_403_for_employee(client: TestClient, db_session: Session) -> None:
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    employee = _create_user(client, admin_headers)
     headers = _headers(client, employee)
 
     response = client.get("/leave-requests/pending", headers=headers)
@@ -283,10 +325,11 @@ def test_pending_returns_403_for_employee(client: TestClient, db_session: Sessio
 def test_pending_returns_direct_reports_requests_ordered_created_at_asc(
     client: TestClient, db_session: Session
 ) -> None:
-    manager = _create_user(db_session, role=Role.MANAGER.value)
-    report_a = _create_user(db_session, manager_id=manager.id)
-    report_b = _create_user(db_session, manager_id=manager.id)
-    other_manager_report = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    manager = _create_user(client, admin_headers, role=Role.MANAGER.value)
+    report_a = _create_user(client, admin_headers, manager_id=manager["id"])
+    report_b = _create_user(client, admin_headers, manager_id=manager["id"])
+    other_manager_report = _create_user(client, admin_headers)
 
     client.post(
         "/leave-requests",
@@ -324,15 +367,16 @@ def test_pending_returns_direct_reports_requests_ordered_created_at_asc(
 
     assert response.status_code == 200
     employee_ids = {r["employee_id"] for r in response.json()}
-    assert employee_ids == {str(report_a.id), str(report_b.id)}
+    assert employee_ids == {report_a["id"], report_b["id"]}
     created_ats = [r["created_at"] for r in response.json()]
     assert created_ats == sorted(created_ats)
     assert response.json()[-1]["id"] == second["id"]
 
 
 def test_pending_returns_all_for_hr_admin(client: TestClient, db_session: Session) -> None:
-    hr_admin = _create_user(db_session, role=Role.HR_ADMIN.value)
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    hr_admin = _create_user(client, admin_headers, role=Role.HR_ADMIN.value)
+    employee = _create_user(client, admin_headers)
     submitted = client.post(
         "/leave-requests",
         json={
@@ -353,9 +397,11 @@ def test_pending_returns_all_for_hr_admin(client: TestClient, db_session: Sessio
 def test_sick_reason_hidden_from_an_unrelated_manager_but_visible_to_own_manager(
     client: TestClient, db_session: Session
 ) -> None:
-    own_manager = _create_user(db_session, role=Role.MANAGER.value)
-    other_manager = _create_user(db_session, role=Role.MANAGER.value)
-    employee = _create_user(db_session, manager_id=own_manager.id)
+    admin_headers = _admin_headers(client, db_session)
+    own_manager = _create_user(client, admin_headers, role=Role.MANAGER.value)
+    other_manager = _create_user(client, admin_headers, role=Role.MANAGER.value)
+    employee = _create_user(client, admin_headers, manager_id=own_manager["id"])
+    hr_admin = _create_user(client, admin_headers, role=Role.HR_ADMIN.value)
 
     submitted = client.post(
         "/leave-requests",
@@ -369,20 +415,23 @@ def test_sick_reason_hidden_from_an_unrelated_manager_but_visible_to_own_manager
     ).json()
     assert submitted["reason"] == "flu"
 
-    own_manager_headers = _headers(client, own_manager)
-    hr_admin = _create_user(db_session, role=Role.HR_ADMIN.value)
-
     mine = client.get("/leave-requests/mine", headers=_headers(client, employee)).json()
     assert mine[0]["reason"] == "flu"
 
-    other_manager.manager_id = None
-    db_session.commit()
-
     # own manager's pending view keeps the reason
     pending_for_own_manager = client.get(
-        "/leave-requests/pending", headers=own_manager_headers
+        "/leave-requests/pending", headers=_headers(client, own_manager)
     ).json()
-    assert pending_for_own_manager[0]["reason"] == "flu"
+    own_match = next(r for r in pending_for_own_manager if r["id"] == submitted["id"])
+    assert own_match["reason"] == "flu"
+
+    # an unrelated manager -- not this employee's manager -- never gets the row at
+    # all through /leave-requests/pending (it only ever returns direct reports'
+    # requests), so the reason is hidden from them as a consequence.
+    pending_for_other_manager = client.get(
+        "/leave-requests/pending", headers=_headers(client, other_manager)
+    ).json()
+    assert submitted["id"] not in {r["id"] for r in pending_for_other_manager}
 
     pending_for_hr = client.get(
         "/leave-requests/pending", headers=_headers(client, hr_admin)
@@ -392,8 +441,9 @@ def test_sick_reason_hidden_from_an_unrelated_manager_but_visible_to_own_manager
 
 
 def test_annual_reason_never_stripped(client: TestClient, db_session: Session) -> None:
-    hr_admin = _create_user(db_session, role=Role.HR_ADMIN.value)
-    employee = _create_user(db_session)
+    admin_headers = _admin_headers(client, db_session)
+    hr_admin = _create_user(client, admin_headers, role=Role.HR_ADMIN.value)
+    employee = _create_user(client, admin_headers)
 
     submitted = client.post(
         "/leave-requests",

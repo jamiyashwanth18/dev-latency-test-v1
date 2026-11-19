@@ -60,7 +60,7 @@ def create_leave_request(
 ) -> LeaveRequestPublic:
     working_days = working_days_between(payload.start_date, payload.end_date)
 
-    overlap_count = db.scalar(
+    overlapping_request_id = db.scalar(
         select(LeaveRequest.id)
         .where(
             LeaveRequest.employee_id == user.id,
@@ -70,7 +70,7 @@ def create_leave_request(
         )
         .limit(1)
     )
-    has_overlap = overlap_count is not None
+    has_overlap = overlapping_request_id is not None
 
     leave_request = LeaveRequest(
         employee_id=user.id,
