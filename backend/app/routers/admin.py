@@ -49,6 +49,25 @@ def _parse_uuid_or_404(value: str, *, detail: str) -> uuid.UUID:
         raise HTTPException(status_code=404, detail=detail) from exc
 
 
+def _creates_cycle(db: Session, user: User, manager: User) -> bool:
+    """True when making ``manager`` the manager of ``user`` closes a reporting loop.
+
+    Walks the manager chain upward from ``manager``: if ``user`` is reached, the
+    assignment would make some manager report, transitively, to their own report.
+    """
+    seen: set[uuid.UUID] = set()
+    current: User | None = manager
+    while current is not None:
+        if current.id == user.id:
+            return True
+        if current.id in seen:
+            # Already-broken chain elsewhere; not this assignment's problem to detect.
+            return False
+        seen.add(current.id)
+        current = db.get(User, current.manager_id) if current.manager_id else None
+    return False
+
+
 @router.get("/users", response_model=list[AdminUserPublic])
 def list_users(
     db: Session = Depends(get_db),  # noqa: B008
@@ -105,9 +124,9 @@ def update_user(
                 raise HTTPException(status_code=404, detail="Manager not found")
             if manager_id == user.id:
                 raise HTTPException(status_code=422, detail="A user may not be their own manager")
-            if manager.manager_id == user.id:
+            if _creates_cycle(db, user, manager):
                 raise HTTPException(
-                    status_code=422, detail="Two users may not be each other's manager"
+                    status_code=422, detail="This assignment would create a reporting cycle"
                 )
             user.manager_id = manager_id
         else:

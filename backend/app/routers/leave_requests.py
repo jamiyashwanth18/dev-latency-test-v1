@@ -14,7 +14,7 @@ from app.database import get_db
 from app.dependencies import get_current_user, to_iso_z, utcnow
 from app.leave_calc import working_days_between
 from app.models import AuditLogEntry, LeaveRequest, LeaveStatus, LeaveType, Role, User
-from app.routers.balances import _approved_annual_days, _get_or_create_balance
+from app.routers.balances import _approved_annual_days, _get_or_create_balance, _peek_balance_fields
 from app.schemas import LeaveRequestCreate, LeaveRequestDecision, LeaveRequestPublic
 
 router = APIRouter()
@@ -32,17 +32,52 @@ def _can_see_reason(leave_request: LeaveRequest, viewer: User) -> bool:
 
 
 def _remaining_balance(db: Session, employee: User) -> int:
-    """Same rule as GET /balances/mine, for whichever employee owns the request."""
+    """Same rule as GET /balances/mine, for whichever employee owns the request.
+
+    Persists the balance row on first read: used only where the request being
+    served is itself a write (submission, decision), so one auto-create is an
+    acceptable, expected side effect of that write.
+    """
     year = utcnow().year
     balance = _get_or_create_balance(db, employee, year)
     approved_annual_days = _approved_annual_days(db, employee, year)
     return balance.allocated_days + balance.adjustment_days - approved_annual_days
 
 
-def _serialize(leave_request: LeaveRequest, *, viewer: User, db: Session) -> LeaveRequestPublic:
+def _remaining_balance_readonly(db: Session, employee: User, cache: dict) -> int:
+    """Same rule, but a pure read: never creates a leave_balances row.
+
+    Used by the list endpoints, which must not write as a side effect of a GET,
+    and caches by (employee_id, year) so listing N rows for the same few
+    employees costs a handful of queries, not up to 2N.
+    """
+    year = utcnow().year
+    key = (employee.id, year)
+    if key in cache:
+        return cache[key]
+    allocated_days, adjustment_days = _peek_balance_fields(db, employee, year)
+    approved_annual_days = _approved_annual_days(db, employee, year)
+    remaining = allocated_days + adjustment_days - approved_annual_days
+    cache[key] = remaining
+    return remaining
+
+
+def _serialize(
+    leave_request: LeaveRequest,
+    *,
+    viewer: User,
+    db: Session,
+    balance_cache: dict | None = None,
+) -> LeaveRequestPublic:
     reason = leave_request.reason
-    if leave_request.leave_type == "sick" and not _can_see_reason(leave_request, viewer):
+    if leave_request.leave_type == LeaveType.SICK.value and not _can_see_reason(
+        leave_request, viewer
+    ):
         reason = None
+    if balance_cache is not None:
+        remaining_balance = _remaining_balance_readonly(db, leave_request.employee, balance_cache)
+    else:
+        remaining_balance = _remaining_balance(db, leave_request.employee)
     return LeaveRequestPublic(
         id=str(leave_request.id),
         employee_id=str(leave_request.employee_id),
@@ -54,7 +89,7 @@ def _serialize(leave_request: LeaveRequest, *, viewer: User, db: Session) -> Lea
         working_days=leave_request.working_days,
         status=leave_request.status,
         has_overlap=leave_request.has_overlap,
-        remaining_balance=_remaining_balance(db, leave_request.employee),
+        remaining_balance=remaining_balance,
         manager_comment=leave_request.manager_comment,
         decided_by=str(leave_request.decided_by) if leave_request.decided_by else None,
         decided_at=to_iso_z(leave_request.decided_at) if leave_request.decided_at else None,
@@ -139,7 +174,8 @@ def list_mine(
         .where(LeaveRequest.employee_id == user.id)
         .order_by(LeaveRequest.created_at.desc(), LeaveRequest.id.desc())
     ).all()
-    return [_serialize(r, viewer=user, db=db) for r in rows]
+    balance_cache: dict = {}
+    return [_serialize(r, viewer=user, db=db, balance_cache=balance_cache) for r in rows]
 
 
 @router.get("/leave-requests/pending", response_model=list[LeaveRequestPublic])
@@ -158,7 +194,8 @@ def list_pending(
     query = query.order_by(LeaveRequest.created_at.asc(), LeaveRequest.id.asc())
 
     rows = db.scalars(query).all()
-    return [_serialize(r, viewer=user, db=db) for r in rows]
+    balance_cache: dict = {}
+    return [_serialize(r, viewer=user, db=db, balance_cache=balance_cache) for r in rows]
 
 
 @router.post("/leave-requests/{id}/decision", response_model=LeaveRequestPublic)

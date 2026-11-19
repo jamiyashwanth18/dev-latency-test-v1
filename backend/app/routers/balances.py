@@ -8,6 +8,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -34,9 +35,37 @@ def _get_or_create_balance(db: Session, user: User, year: int) -> LeaveBalance:
         adjustment_days=0,
     )
     db.add(balance)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Lost a race with a concurrent first read for the same (user_id, year):
+        # the unique index rejected our insert. Same guard app/seed.py uses for
+        # the analogous user-creation race -- roll back and read what won.
+        db.rollback()
+        balance = db.scalar(
+            select(LeaveBalance).where(LeaveBalance.user_id == user.id, LeaveBalance.year == year)
+        )
+        if balance is None:
+            raise
+        return balance
     db.refresh(balance)
     return balance
+
+
+def _peek_balance_fields(db: Session, user: User, year: int) -> tuple[int, int]:
+    """(allocated_days, adjustment_days) without creating the row: a pure read.
+
+    Used where a balance is only being displayed, not the subject of the request
+    (e.g. listing leave requests), so a GET never has the side effect of writing
+    a leave_balances row.
+    """
+    balance = db.scalar(
+        select(LeaveBalance).where(LeaveBalance.user_id == user.id, LeaveBalance.year == year)
+    )
+    if balance is not None:
+        return balance.allocated_days, balance.adjustment_days
+    settings = get_settings()
+    return settings.annual_leave_allocation_days, 0
 
 
 def _approved_annual_days(db: Session, user: User, year: int) -> int:
