@@ -15,6 +15,32 @@ import {
 
 // [US-010-3] Approve/reject with a comment, the resulting balance deduction, and the
 // over-approval block, driven through the real UI (Approvals, My Leave) and API.
+//
+// The contract pins balances and adjustments to the *current* UTC year, so every date
+// and `year` field here is computed from the current UTC year at run time, never
+// authored as a literal year. The Approvals screen opens its decide panel as a plain
+// comment box and Approve/Reject buttons beside the row it belongs to (Approvals.tsx):
+// there is no "Decide:" heading or wrapping <section>, so the panel is driven by its
+// "Comment" label and its buttons, not by locating a heading.
+
+const CURRENT_YEAR = new Date().getUTCFullYear();
+
+// Returns the ISO date of the Monday on or after the given year/month/day, so a test
+// can ask for "N working days starting on a Monday" without assuming what weekday any
+// particular calendar date falls on this year.
+function mondayOnOrAfter(year: number, month: number, day: number): string {
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const dow = d.getUTCDay();
+  const add = (8 - dow) % 7;
+  d.setUTCDate(d.getUTCDate() + add);
+  return d.toISOString().slice(0, 10);
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 async function signInThroughUi(page: import("@playwright/test").Page, name: string) {
   await page.goto("/");
@@ -36,6 +62,10 @@ async function submitRequest(
   await expect(page.getByText(/Filed/i)).toBeVisible();
 }
 
+// The Approvals screen renders the decide panel as a comment box plus Approve/Reject
+// buttons directly below the row (no heading, no <section>), opened via that row's own
+// "Decide" button. Only one row's panel is open at a time, so once it is open its
+// "Comment" label and its buttons are unique on the page.
 async function approveOrRejectViaUi(
   page: import("@playwright/test").Page,
   employeeName: string,
@@ -46,9 +76,8 @@ async function approveOrRejectViaUi(
   const row = page.locator("table tbody tr", { hasText: employeeName });
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /Decide/i }).click();
-  const panel = page.getByRole("heading", { name: /Decide:/i }).locator("xpath=ancestor::section");
-  await panel.getByRole("textbox").first().fill(comment);
-  await panel.getByRole("button", { name: new RegExp(action) }).click();
+  await page.getByLabel("Comment").fill(comment);
+  await page.getByRole("button", { name: new RegExp(`^${action}$`) }).click();
 }
 
 test("[AC-021] a manager approves a direct report's annual request with a comment: it clears the queue, shows Approved with the comment on My Leave, and drops the remaining balance by its working days", async ({
@@ -66,10 +95,13 @@ test("[AC-021] a manager approves a direct report's annual request with a commen
     manager_id: manager.id,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 10, 1);
+  const end = addDaysIso(start, 2); // Monday through Wednesday: 3 working days.
+
   await signInThroughUi(page, employeeName);
   await submitRequest(page, {
-    start: "2027-10-04",
-    end: "2027-10-06",
+    start,
+    end,
     type: "annual",
     reason: `QA AC021 reason ${suffix}`,
   });
@@ -92,7 +124,7 @@ test("[AC-021] a manager approves a direct report's annual request with a commen
   await page.getByRole("button", { name: /Sign out/i }).click();
   await signInThroughUi(page, employeeName);
   await page.goto("/my-leave");
-  const decidedRow = page.locator("table tbody tr", { hasText: "2027-10-04" });
+  const decidedRow = page.locator("table tbody tr", { hasText: start });
   await expect(decidedRow).toBeVisible();
   await expect(decidedRow.getByText(/Approved/i)).toBeVisible();
   await expect(decidedRow.getByText(comment)).toBeVisible();
@@ -117,10 +149,13 @@ test("[AC-022] a manager rejects a pending request with a comment: status become
     manager_id: manager.id,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 10, 8);
+  const end = addDaysIso(start, 1); // Monday and Tuesday: 2 working days.
+
   await signInThroughUi(page, employeeName);
   await submitRequest(page, {
-    start: "2027-10-11",
-    end: "2027-10-12",
+    start,
+    end,
     type: "annual",
     reason: `QA AC022 reason ${suffix}`,
   });
@@ -137,7 +172,7 @@ test("[AC-022] a manager rejects a pending request with a comment: status become
   await page.getByRole("button", { name: /Sign out/i }).click();
   await signInThroughUi(page, employeeName);
   await page.goto("/my-leave");
-  const decidedRow = page.locator("table tbody tr", { hasText: "2027-10-11" });
+  const decidedRow = page.locator("table tbody tr", { hasText: start });
   await expect(decidedRow).toBeVisible();
   await expect(decidedRow.getByText(/Rejected/i)).toBeVisible();
   await expect(decidedRow.getByText(comment)).toBeVisible();
@@ -164,15 +199,18 @@ test("[AC-023] approving an annual request longer than the remaining balance is 
   // Cut the employee's remaining balance down to 1 day, so a 3-working-day request
   // exceeds it.
   await putAdminBalance(adminToken, employee.id, {
-    year: 2027,
+    year: CURRENT_YEAR,
     new_remaining_days: 1,
     note: `QA AC023 cut balance ${suffix}`,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 10, 15);
+  const end = addDaysIso(start, 2); // Monday through Wednesday: 3 working days.
+
   await signInThroughUi(page, employeeName);
   await submitRequest(page, {
-    start: "2027-10-18",
-    end: "2027-10-20",
+    start,
+    end,
     type: "annual",
     reason: `QA AC023 reason ${suffix}`,
   });
@@ -217,15 +255,18 @@ test("[AC-024] approving a sick request succeeds even when the annual balance is
 
   // Drive the annual remaining balance negative through an HR adjustment.
   await putAdminBalance(adminToken, employee.id, {
-    year: 2027,
+    year: CURRENT_YEAR,
     new_remaining_days: -5,
     note: `QA AC024 negative balance ${suffix}`,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 10, 22);
+  const end = addDaysIso(start, 1);
+
   await signInThroughUi(page, employeeName);
   await submitRequest(page, {
-    start: "2027-10-25",
-    end: "2027-10-26",
+    start,
+    end,
     type: "sick",
     reason: `QA AC024 reason ${suffix}`,
   });
@@ -264,6 +305,9 @@ test("[AC-020] a manager attempting a decision on a request that is not their di
     manager_id: ownManager.id,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 11, 1);
+  const end = addDaysIso(start, 1);
+
   // Submit the request through the API directly: the journey under test is the
   // manager's decision attempt, not the submission.
   const employeeToken = await signInAs(employee.id);
@@ -276,8 +320,8 @@ test("[AC-020] a manager attempting a decision on a request that is not their di
         Authorization: `Bearer ${employeeToken}`,
       },
       body: JSON.stringify({
-        start_date: "2027-11-01",
-        end_date: "2027-11-02",
+        start_date: start,
+        end_date: end,
         leave_type: "annual",
         reason: `QA refusal reason ${suffix}`,
       }),
@@ -320,10 +364,13 @@ test("[AC-021][NFR-008] a manager approves a direct report's request with a comm
     manager_id: manager.id,
   });
 
+  const start = mondayOnOrAfter(CURRENT_YEAR, 11, 8);
+  const end = addDaysIso(start, 1);
+
   await signInThroughUi(page, employeeName);
   await submitRequest(page, {
-    start: "2027-11-08",
-    end: "2027-11-09",
+    start,
+    end,
     type: "annual",
     reason: `QA AC021Mobile reason ${suffix}`,
   });

@@ -194,6 +194,15 @@ class BalanceResponse(BaseModel):
     remaining_days: int
 
 
+class AuditLogEntryPublic(BaseModel):
+    id: str
+    actor_user_id: str
+    action_type: str
+    leave_request_id: str | None
+    detail: dict
+    created_at: str
+
+
 class AdminBalanceAdjustment(BaseModel):
     year: int
     new_remaining_days: int

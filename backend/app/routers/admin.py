@@ -19,6 +19,7 @@ from app.schemas import (
     AdminUserCreate,
     AdminUserPublic,
     AdminUserUpdate,
+    AuditLogEntryPublic,
     BalanceResponse,
 )
 
@@ -66,6 +67,27 @@ def _creates_cycle(db: Session, user: User, manager: User) -> bool:
         seen.add(current.id)
         current = db.get(User, current.manager_id) if current.manager_id else None
     return False
+
+
+@router.get("/audit-log", response_model=list[AuditLogEntryPublic])
+def list_audit_log(
+    db: Session = Depends(get_db),  # noqa: B008
+    _: User = Depends(_require_hr_admin),  # noqa: B008
+) -> list[AuditLogEntryPublic]:
+    rows = db.scalars(
+        select(AuditLogEntry).order_by(AuditLogEntry.created_at.desc(), AuditLogEntry.id.desc())
+    ).all()
+    return [
+        AuditLogEntryPublic(
+            id=str(row.id),
+            actor_user_id=str(row.actor_user_id),
+            action_type=row.action_type,
+            leave_request_id=str(row.leave_request_id) if row.leave_request_id else None,
+            detail=row.detail,
+            created_at=to_iso_z(row.created_at),
+        )
+        for row in rows
+    ]
 
 
 @router.get("/users", response_model=list[AdminUserPublic])

@@ -16,22 +16,60 @@ import {
 
 // [US-016-3] HR/Admin balance adjustment: the employee's balance updates to the new
 // value, the change is auditable, and it interacts correctly with the approval flow's
-// balance check. The Admin screen may not yet carry an adjustment control (this ticket
-// may land concurrently with the UI work), so AC-031's on-screen assertions are written
-// against the contract's own vocabulary (an "Adjust balance" action per row, a panel
-// that shows the resulting remaining days) and will fail to find it until that UI ships;
-// that is expected, not a defect in this spec.
+// balance check.
+//
+// The Admin screen's adjust-balance panel (Admin.tsx) is a plain comment-box-style
+// panel below the row — "New remaining days" and "Note" fields and a "Save balance"
+// button — with no "Adjust balance" heading and no wrapping <section>, so it is driven
+// by its field labels and button text, not by locating a heading.
 //
 // The current UTC year is used throughout, per the contract: never a year hard-coded at
 // authoring time.
 
 const CURRENT_YEAR = new Date().getUTCFullYear();
 
+// Returns the ISO date of the Monday on or after the given year/month/day, so a test
+// can ask for "N working days starting on a Monday" without assuming what weekday any
+// particular calendar date falls on this year.
+function mondayOnOrAfter(year: number, month: number, day: number): string {
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const dow = d.getUTCDay();
+  const add = (8 - dow) % 7;
+  d.setUTCDate(d.getUTCDate() + add);
+  return d.toISOString().slice(0, 10);
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 async function signInThroughUi(page: import("@playwright/test").Page, name: string) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Choose Your Identity/i })).toBeVisible();
   await page.getByPlaceholder("Name or role").fill(name);
   await page.getByRole("button", { name: new RegExp(name) }).click();
+}
+
+async function openAdjustBalancePanel(
+  page: import("@playwright/test").Page,
+  employeeName: string,
+) {
+  const row = page.locator("tr", { hasText: employeeName });
+  await expect(row).toBeVisible();
+  await row.getByRole("button", { name: /Adjust balance/i }).click();
+  return row;
+}
+
+async function saveAdjustment(
+  page: import("@playwright/test").Page,
+  newRemainingDays: number,
+  note: string,
+) {
+  await page.getByLabel("New remaining days").fill(String(newRemainingDays));
+  await page.getByLabel("Note").fill(note);
+  await page.getByRole("button", { name: /Save balance/i }).click();
 }
 
 test("[AC-031] HR/Admin adjusts an employee's remaining annual balance with a note, the screen shows the new remaining days, and the employee's own balance view reports the same value", async ({
@@ -50,18 +88,10 @@ test("[AC-031] HR/Admin adjusts an employee's remaining annual balance with a no
   await page.goto("/admin");
   await expect(page.getByText(/Administration/i)).toBeVisible();
 
-  const row = page.locator("tr", { hasText: employeeName });
-  await expect(row).toBeVisible();
-  await row.getByRole("button", { name: /Adjust balance/i }).click();
+  const row = await openAdjustBalancePanel(page, employeeName);
+  await saveAdjustment(page, 12, note);
 
-  const panel = page
-    .getByRole("heading", { name: /Adjust balance/i })
-    .locator("xpath=ancestor::section");
-  await panel.getByRole("spinbutton").or(panel.locator('input[type="number"]')).fill("12");
-  await panel.getByRole("textbox").last().fill(note);
-  await panel.getByRole("button", { name: /Save/i }).click();
-
-  await expect(row.getByText(/12/)).toBeVisible();
+  await expect(row.getByText(/12 days/)).toBeVisible();
 
   const employeeBalance = await getBalanceMine(await signInAs(employee.id));
   expect((employeeBalance.body as { remaining_days: number }).remaining_days).toBe(12);
@@ -177,11 +207,14 @@ test("[AC-031-INTERACTION] an adjustment to N days lets an N-working-day annual 
   const employeeToken = await signInAs(employee.id);
   const managerToken = await signInAs(manager.id);
 
-  // A request of exactly N (3) working days — a fixed mid-year Monday-to-Wednesday —
+  // A request of exactly N (3) working days — a Monday through Wednesday, computed
+  // from the current year so it never assumes which weekday a literal date falls on —
   // approves successfully.
+  const exactStart = mondayOnOrAfter(CURRENT_YEAR, 7, 1);
+  const exactEnd = addDaysIso(exactStart, 2);
   const exact = await submitLeaveRequest(employeeToken, {
-    start_date: `${CURRENT_YEAR}-07-06`,
-    end_date: `${CURRENT_YEAR}-07-08`,
+    start_date: exactStart,
+    end_date: exactEnd,
     leave_type: "annual",
     reason: `QA AC031Interact exact ${suffix}`,
   });
@@ -206,11 +239,14 @@ test("[AC-031-INTERACTION] an adjustment to N days lets an N-working-day annual 
   });
   expect(readjust.status).toBe(200);
 
-  // A request of N+1 (5) working days — a fixed mid-year Monday-to-Friday — is blocked
-  // with the over-balance message naming the remaining balance (4).
+  // A request of N+1 (5) working days — a full Monday-to-Friday week, two weeks after
+  // the first range so it never overlaps it — is blocked with the over-balance message
+  // naming the remaining balance (4).
+  const overStart = addDaysIso(exactStart, 14);
+  const overEnd = addDaysIso(overStart, 4);
   const over = await submitLeaveRequest(employeeToken, {
-    start_date: `${CURRENT_YEAR}-08-02`,
-    end_date: `${CURRENT_YEAR}-08-06`,
+    start_date: overStart,
+    end_date: overEnd,
     leave_type: "annual",
     reason: `QA AC031Interact over ${suffix}`,
   });
@@ -243,18 +279,10 @@ test("[AC-031][NFR-008] the balance-adjustment flow renders and works at a mobil
   await page.goto("/admin");
   await expect(page.getByText(/Administration/i)).toBeVisible();
 
-  const row = page.locator("tr", { hasText: employeeName });
-  await expect(row).toBeVisible();
-  await row.getByRole("button", { name: /Adjust balance/i }).click();
+  const row = await openAdjustBalancePanel(page, employeeName);
+  await saveAdjustment(page, 9, note);
 
-  const panel = page
-    .getByRole("heading", { name: /Adjust balance/i })
-    .locator("xpath=ancestor::section");
-  await panel.getByRole("spinbutton").or(panel.locator('input[type="number"]')).fill("9");
-  await panel.getByRole("textbox").last().fill(note);
-  await panel.getByRole("button", { name: /Save/i }).click();
-
-  await expect(row.getByText(/9/)).toBeVisible();
+  await expect(row.getByText(/9 days/)).toBeVisible();
 
   const employeeBalance = await getBalanceMine(await signInAs(employee.id));
   expect((employeeBalance.body as { remaining_days: number }).remaining_days).toBe(9);
