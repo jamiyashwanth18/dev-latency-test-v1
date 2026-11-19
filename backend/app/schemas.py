@@ -4,11 +4,15 @@ One pair per entity in the approved data model, plus the placeholder every
 generated route returns until it has been implemented.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from datetime import date
 
-from app.models import Role
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+
+from app.leave_calc import working_days_between
+from app.models import LeaveType, Role
 
 _VALID_ROLES = {r.value for r in Role}
+_VALID_LEAVE_TYPES = {t.value for t in LeaveType}
 
 
 class UserPublic(BaseModel):
@@ -103,6 +107,59 @@ class AdminUserUpdate(BaseModel):
         if v is None:
             raise ValueError("is_active must not be null")
         return v
+
+
+class LeaveRequestCreate(BaseModel):
+    start_date: date
+    end_date: date
+    leave_type: str
+    reason: str = Field(min_length=1)
+
+    @field_validator("reason")
+    @classmethod
+    def _non_blank_reason(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("reason must not be empty or whitespace")
+        return v
+
+    @field_validator("leave_type")
+    @classmethod
+    def _known_leave_type(cls, v: str) -> str:
+        lowered = v.lower()
+        if lowered not in _VALID_LEAVE_TYPES:
+            raise ValueError("unknown leave_type")
+        return lowered
+
+    @field_validator("end_date")
+    @classmethod
+    def _end_not_before_start(cls, v: date, info: ValidationInfo) -> date:
+        start = info.data.get("start_date")
+        if start is not None and v < start:
+            raise ValueError("end_date must not be before start_date")
+        return v
+
+    @model_validator(mode="after")
+    def _range_has_a_weekday(self) -> "LeaveRequestCreate":
+        if working_days_between(self.start_date, self.end_date) == 0:
+            raise ValueError("date range contains no Monday-to-Friday day")
+        return self
+
+
+class LeaveRequestPublic(BaseModel):
+    id: str
+    employee_id: str
+    employee_name: str
+    start_date: str
+    end_date: str
+    leave_type: str
+    reason: str | None
+    working_days: int
+    status: str
+    has_overlap: bool
+    manager_comment: str | None
+    decided_by: str | None
+    decided_at: str | None
+    created_at: str
 
 
 class StubResponse(BaseModel):
