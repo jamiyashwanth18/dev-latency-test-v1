@@ -7,6 +7,10 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+# The schema is applied by Alembic on startup, so the migrations and their config
+# have to be in the image, not just in the repository.
+COPY alembic.ini ./alembic.ini
+COPY migrations ./migrations
 
 # Run as an unprivileged user. The service never needs root, and a container that
 # drops it limits what a compromise of the app can do to the host.
