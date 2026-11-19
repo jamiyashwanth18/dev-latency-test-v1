@@ -3,33 +3,43 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start narrative -->
-### DEV-US-001 · draft · source: dev:US-001
+### DEV-US-001 · approved · source: dev:US-001
 
-Ticket for selecting user identity from a list was deferred this run.
+Implements selecting a user identity from a list instead of external login.
 
-Status: deferred. Commit: none. No implementation work was completed or merged for this ticket in this development run.
+Ticket US-001 (Select my identity from the user list) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
 
 **Related:** US-001
 
-### DEV-US-002 · draft · source: dev:US-002
+### DEV-US-014 · approved · source: dev:US-014
 
-Ticket for enforcing role-based permissions was skipped this run.
+Implements management of the user list.
 
-Status: skipped. Commit: none. No implementation work was completed for this ticket in this development run.
+Ticket US-014 (Manage the user list) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
 
-**Related:** US-002
+**Related:** US-014
 
-### DEV-US-003 · draft · source: dev:US-003
+### DEV-US-015 · approved · source: dev:US-015
 
-Ticket for ending a user session was skipped this run.
+Implements assigning reporting lines between employees and managers.
 
-Status: skipped. Commit: none. No implementation work was completed for this ticket in this development run.
+Ticket US-015 (Assign reporting lines) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
 
-**Related:** US-003
+**Related:** US-015
 
-### DEV-US-FIX-1 · draft · source: dev:US-FIX-1
+### DEV-US-004 · approved · source: dev:US-004
 
-Ticket to fix the project scaffold's failing checks did not succeed.
+Implements submitting a leave request.
 
-Status: failed. Commit: none. The scaffold's failing checks remain unresolved as of this run; no related requirement key was given for this ticket.
+Ticket US-004 (Submit a leave request) status=delivered, commit=e5088ceda469d23abef9a40345a0edcaebba6225. No further test or review details provided in input.
+
+**Related:** US-004
+
+### DEV-US-005 · approved · source: dev:US-005
+
+Implements showing the whole-working-day length of a submitted leave request.
+
+Ticket US-005 (See the whole-working-day length of my request) status=delivered, commit=e5088ceda469d23abef9a40345a0edcaebba6225. No further test or review details provided in input.
+
+**Related:** US-005, US-004
 <!-- sdlc:auto:end narrative -->

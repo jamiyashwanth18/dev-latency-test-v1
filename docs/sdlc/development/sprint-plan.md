@@ -102,6 +102,7 @@ Capacity: 0 points · Committed: 0
 | FIX-SEC-githubactions-s8543-ca13026c | Story | Fix: Using dependencies without locking resolved versions is security-sensitive. (.github/workflows/deploy.yml) | — | devops-agent | — |
 | FIX-DAST-zap-10038-a3ec3827 | Story | Fix: Content Security Policy (CSP) Header Not Set | — | backend-agent | — |
 | FIX-DAST-zap-10020-c96362a3 | Story | Fix: Missing Anti-clickjacking Header | — | backend-agent | — |
+| FIX-SEC-python-s7608-bce01fa0 | Story | Fix: Add the 'ExpectedBucketOwner' parameter to verify S3 bucket ownership. (backend/scripts/check_connections.py) | — | — | — |
 
 ## Unscheduled
 

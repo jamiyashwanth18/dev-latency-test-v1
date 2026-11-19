@@ -8,7 +8,6 @@
 **Commit:** `6d52753`
 
 **Delivered:**
-- US-001: Select my identity from the user list
 - US-FIX-1: Fix the scaffold's failing checks
 
 ## 17ff63b0a6a2 — 2026-11-19
