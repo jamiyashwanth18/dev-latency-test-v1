@@ -18,8 +18,7 @@
 
 **Commit:** `6d52753`
 
-**Delivered:**
-- US-FIX-1: Fix the scaffold's failing checks
+_Nothing delivered in this window._
 
 ## 17ff63b0a6a2 — 2026-11-19
 

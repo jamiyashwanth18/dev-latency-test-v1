@@ -3,43 +3,57 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start narrative -->
-### DEV-US-001 · approved · source: dev:US-001
+### DEV-US-006 · approved · source: dev:US-006
 
-Implements selecting a user identity from a list instead of external login.
+Delivered functionality to warn users about overlapping leave requests.
 
-Ticket US-001 (Select my identity from the user list) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
+Ticket US-006 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a.
 
-**Related:** US-001
+**Related:** US-006
 
-### DEV-US-014 · approved · source: dev:US-014
+### DEV-US-007 · approved · source: dev:US-007
 
-Implements management of the user list.
+Delivered functionality for employees to view their leave requests and status.
 
-Ticket US-014 (Manage the user list) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
+Ticket US-007 status=delivered. Commit 7237d2f70ca25ff3908c6be6dd408dd40743290b.
 
-**Related:** US-014
+**Related:** US-007
 
-### DEV-US-015 · approved · source: dev:US-015
+### DEV-US-008 · approved · source: dev:US-008
 
-Implements assigning reporting lines between employees and managers.
+Delivered functionality to show remaining annual leave balance to employees.
 
-Ticket US-015 (Assign reporting lines) status=delivered, commit=a223610c13988e97b22542aff8766be68ea99041. No further test or review details provided in input.
+Ticket US-008 status=delivered. Commit 7237d2f70ca25ff3908c6be6dd408dd40743290b (same commit as US-007).
 
-**Related:** US-015
+**Related:** US-008
 
-### DEV-US-004 · approved · source: dev:US-004
+### DEV-US-009 · approved · source: dev:US-009
 
-Implements submitting a leave request.
+Delivered functionality for managers to review pending requests from direct reports.
 
-Ticket US-004 (Submit a leave request) status=delivered, commit=e5088ceda469d23abef9a40345a0edcaebba6225. No further test or review details provided in input.
+Ticket US-009 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006).
 
-**Related:** US-004
+**Related:** US-009
 
-### DEV-US-005 · approved · source: dev:US-005
+### DEV-US-020 · approved · source: dev:US-020
 
-Implements showing the whole-working-day length of a submitted leave request.
+Delivered access restriction so sick-leave reasons are only visible to authorized roles.
 
-Ticket US-005 (See the whole-working-day length of my request) status=delivered, commit=e5088ceda469d23abef9a40345a0edcaebba6225. No further test or review details provided in input.
+Ticket US-020 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006 and US-009).
 
-**Related:** US-005, US-004
+**Related:** US-020
+
+### DEV-US-021 · approved · source: dev:US-021
+
+Delivered getting-started guidance accessible within the app.
+
+Ticket US-021 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006, US-009, US-020).
+
+**Related:** US-021
+
+### DEV-US-FIX-1 · approved · source: dev:US-FIX-1
+
+Fixed failing checks left over from the project scaffold; not tied to a specific user story.
+
+Ticket US-FIX-1 status=delivered. Commit 8d34cb11bb8c2096def9da3e646191969bf9085d. No requirement key provided for this ticket.
 <!-- sdlc:auto:end narrative -->

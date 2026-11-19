@@ -99,10 +99,12 @@ Capacity: 0 points · Committed: 0
 | Key | Type | Title | Points | Role | Depends on |
 |---|---|---|---|---|---|
 | FIX-SEC-docker-s8544-82cfea7f | Story | Fix: Using dependencies without locking resolved versions is security-sensitive. (backend/Dockerfile) | — | — | — |
-| FIX-SEC-githubactions-s8543-ca13026c | Story | Fix: Using dependencies without locking resolved versions is security-sensitive. (.github/workflows/deploy.yml) | — | devops-agent | — |
 | FIX-DAST-zap-10038-a3ec3827 | Story | Fix: Content Security Policy (CSP) Header Not Set | — | backend-agent | — |
 | FIX-DAST-zap-10020-c96362a3 | Story | Fix: Missing Anti-clickjacking Header | — | backend-agent | — |
-| FIX-SEC-python-s7608-bce01fa0 | Story | Fix: Add the 'ExpectedBucketOwner' parameter to verify S3 bucket ownership. (backend/scripts/check_connections.py) | — | — | — |
+| FIX-DEP-osv-tinypool-b877dfe3 | Story | Fix: tinypool 1.1.1 has a known vulnerability (CVSS 9.5) (frontend/package-lock.json) | — | frontend-agent | — |
+| FIX-DEP-osv-vitest-5e660a9e | Story | Fix: vitest 3.0.5 has a known vulnerability (CVSS 9.8) (frontend/package-lock.json) | — | frontend-agent | — |
+| FIX-DEP-osv-playwright-283d859b | Story | Fix: playwright 1.49.1 has a known vulnerability (CVSS 8.7) (frontend/package-lock.json) | — | frontend-agent | — |
+| FIX-DEP-osv-vite-047954c6 | Story | Fix: vite 6.0.11 has a known vulnerability (CVSS 8.2) (frontend/package-lock.json) | — | frontend-agent | — |
 
 ## Unscheduled
 

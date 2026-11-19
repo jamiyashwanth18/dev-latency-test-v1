@@ -7,16 +7,25 @@ _No E2E run yet._
 <!-- sdlc:auto:end e2e -->
 
 <!-- sdlc:auto:start unit -->
-**Coverage:** backend 95.3% · frontend 51.0%
+**Coverage:** —
 
-**Test cases:** 0 / 82 written
+**Test cases:** — / — written
 
-**Lines written:** 0
+**Lines written:** —
 
-**Files deferred:** 0
+**Files deferred:** —
 <!-- sdlc:auto:end unit -->
 
 <!-- sdlc:auto:start dev-checks -->
+### Sprint 3
+
+| Step | Status | Ticket | Finished |
+|---|---|---|---|
+| run_checks | succeeded | — | 2026-11-19 |
+| write_tests | succeeded | US-007 | 2026-11-19 |
+| write_tests | succeeded | US-009 | 2026-11-19 |
+| write_tests | succeeded | US-021 | 2026-11-19 |
+
 ### Sprint 2
 
 | Step | Status | Ticket | Finished |

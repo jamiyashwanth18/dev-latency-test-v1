@@ -3,9 +3,9 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start summary -->
-90 tests · Passed 90 · Failed 0 · Skipped 0 · Not run 0
+154 tests · Passed 145 · Failed 0 · Skipped 0 · Not run 9
 
-Acceptance criteria covered: 9/41 · passing: 9/41
+Acceptance criteria covered: 21/41 · passing: 14/41
 <!-- sdlc:auto:end summary -->
 
 <!-- sdlc:auto:start tests -->
@@ -106,6 +106,81 @@ Acceptance criteria covered: 9/41 · passing: 9/41
 | AC-029, NFR-002 | [AC-029][NFR-002] deactivating a user through the admin API ends every session they hold and blocks a fresh sign-in | E2E | Passed | `frontend/e2e/admin-user-management.spec.ts` |
 | AC-030 | [AC-030] a submitted request routes only to the employee's own manager's pending queue, and reassigning moves future requests | E2E | Passed | `frontend/e2e/admin-user-management.spec.ts` |
 
+## Sprint 3
+
+### US-007: View my leave requests and their status
+
+| Criteria | Test | Level | Result | File |
+|---|---|---|---|---|
+| AC-016 | MyLeave balance panel and overlap badge > [AC-016] the balance panel shows the HR adjustment effect | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| AC-016, AC-018 | MyLeave balance panel and overlap badge > [AC-016][AC-018] the balance panel shows remaining of allocated days, labelled with the year | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| AC-017 | MyLeave balance panel and overlap badge > [AC-017] approved sick leave is listed but visibly excluded from the annual balance figure | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| AC-018 | MyLeave balance panel and overlap badge > [AC-018] a new calendar year with no adjustment or approvals reads 20 of 20 | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| — | MyLeave balance panel and overlap badge > a row whose has_overlap is true carries a visible overlap warning badge | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| — | MyLeave balance panel and overlap badge > a row without overlap shows no overlap badge | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| — | MyLeave balance panel and overlap badge > the balance panel shows an error state with retry when its fetch fails | Unit | Passed | `frontend/src/screens/MyLeaveBalance.test.tsx` |
+| AC-017 | test_ac017_approved_sick_leave_leaves_remaining_days_unchanged | Integration | Passed | `backend/tests/integration/test_balances.py` |
+| AC-018 | test_ac018_prior_year_annual_approval_does_not_reduce_current_years_remaining_days | Integration | Passed | `backend/tests/integration/test_balances.py` |
+| — | test_balances_mine_honours_an_hr_adjustment_made_via_put_admin_users_id_balance | Integration | Passed | `backend/tests/integration/test_balances.py` |
+| AC-014, AC-015 | test_ac014_ac015_mine_shows_updated_status_and_manager_comment_on_next_read | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| AC-016 | test_ac016_first_read_auto_creates_the_balance_row_with_defaults | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| AC-017 | test_ac017_approved_sick_leave_never_changes_approved_annual_or_remaining | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| AC-018 | test_ac018_request_counts_against_the_year_of_its_start_date | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| — | test_authenticated_call_slides_the_idle_window | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| — | test_balance_shape_and_formula | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| — | test_only_approved_annual_requests_are_deducted | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| — | test_unauthenticated_call_returns_401 | Integration | Passed | `backend/tests/unit/test_balances.py` |
+| AC-014, AC-015 | [AC-014][AC-015] an employee's request shows Pending with its dates, type and working days, then Approved with the manager's comment after a decision, and offers no way to resubmit it | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
+| AC-015 | [AC-015] a rejected request shows Rejected with the manager's comment after reloading | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
+| AC-016 | [AC-016] the balance panel shows a remaining 20 days and drops by the approved annual request's working days | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
+
+### US-009: Review pending requests from my direct reports
+
+| Criteria | Test | Level | Result | File |
+|---|---|---|---|---|
+| AC-013 | Approvals > [AC-013] a request with has_overlap true shows a visible overlap warning | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| AC-019 | Approvals > [AC-019] loads the pending queue from GET /leave-requests/pending and renders employee, dates, type, working days, reason and remaining balance, with no seeded sample data | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| AC-020 | Approvals > [AC-020] an employee hitting the screen sees the 403 state with no actionable controls | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| AC-038, AC-039 | Approvals > [AC-038][AC-039] a request whose reason is null renders a 'Restricted' placeholder, not an empty cell | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| — | Approvals > a 401 from the list fetch clears the session and returns to sign-in | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| — | Approvals > a 409 response renders the server's detail message without losing the typed comment | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| — | Approvals > approve or reject without a comment is blocked and shows that a comment is required | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| — | Approvals > approve posts to /leave-requests/{id}/decision with the comment and removes the row on success | Unit | Passed | `frontend/src/screens/Approvals.test.tsx` |
+| AC-013 | test_ac013_overlapping_request_flagged_not_blocked_and_visible_on_mine_and_pending | Integration | Passed | `backend/tests/integration/test_approvals.py` |
+| AC-020 | test_ac020_manager_decision_on_non_direct_report_returns_403_and_stays_pending | Integration | Passed | `backend/tests/integration/test_approvals.py` |
+| AC-038 | test_ac038_sick_reason_hidden_from_unrelated_colleague_and_manager | Integration | Passed | `backend/tests/integration/test_approvals.py` |
+| AC-039 | test_ac039_sick_reason_readable_by_employee_manager_hr_and_annual_reason_never_stripped | Integration | Passed | `backend/tests/integration/test_approvals.py` |
+| — | test_annual_over_balance_returns_409_naming_remaining_balance_sick_approves_fine | Integration | Passed | `backend/tests/integration/test_approvals.py` |
+| AC-019 | test_ac019_pending_item_has_remaining_balance_and_has_overlap | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| AC-020 | test_ac020_manager_approves_direct_reports_request | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| AC-020 | test_ac020_non_manager_gets_403_and_changes_nothing | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_approving_annual_request_exceeding_balance_returns_409_naming_balance | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_deciding_a_non_pending_request_returns_409 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_empty_comment_returns_422 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_malformed_id_returns_404 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_missing_comment_returns_422 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_sick_reason_hidden_from_decision_response_for_unrelated_viewer_but_shown_to_manager | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_sick_request_approval_never_blocked_by_balance | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_unknown_decision_value_returns_422 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| — | test_unknown_id_returns_404 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
+| AC-019 | [AC-019] a manager opens Approvals and sees a direct report's pending request with employee, dates, type, working days, reason, remaining balance and overlap flag, then approves it with a comment and the row clears | E2E | Not run yet | `frontend/e2e/approvals.spec.ts` |
+| AC-020 | [AC-020] a second employee reporting to another manager has a pending request that never appears in the first manager's queue | E2E | Not run yet | `frontend/e2e/approvals.spec.ts` |
+
+### US-021: Access getting-started guidance
+
+| Criteria | Test | Level | Result | File |
+|---|---|---|---|---|
+| AC-040 | GettingStarted > [AC-040] covers all four topics: identity, submitting leave, approving requests and HR administration | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-040 | GettingStarted > [AC-040] filtering by the Employee tab marks approving and HR administration for reference | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-040 | GettingStarted > [AC-040] filtering by the HR/Admin tab marks submit-leave and approving for reference, and keeps administration as applying | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-040 | GettingStarted > [AC-040] filtering by the Manager tab marks submit-leave and HR administration for reference, and keeps approving as applying | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-040 | GettingStarted > [AC-040] the Everyone tab marks every card as applying | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-041 | GettingStarted > [AC-041] any credential example uses the <set-at-first-login> placeholder and no real secret value | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
+| AC-040 | [AC-040] a signed-in user opens Getting Started from the navigation and finds guidance for selecting an identity, submitting leave, approving requests and HR administration | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
+| AC-040 | [AC-040] switching the role view marks the guidance that applies to that role | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
+| AC-041 | [AC-041] every credential-like example on the page uses a placeholder, never a real password or token | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
+| NFR-008 | [NFR-008] the Getting Started page renders readably at a mobile viewport | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
+
 ## Project setup
 
 | Criteria | Test | Level | Result | File |
@@ -119,5 +194,11 @@ Acceptance criteria covered: 9/41 · passing: 9/41
 | — | App > renders a screen inside the app shell and shows its menu | Unit | Passed | `frontend/src/App.test.tsx` |
 | — | test_health_reports_ok | Integration | Passed | `backend/tests/integration/test_health.py` |
 | — | test_the_openapi_document_builds | Integration | Passed | `backend/tests/integration/test_health.py` |
+| AC-016 | test_ac016_put_balance_sets_remaining_days_and_leaves_allocated_days_unchanged | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
+| — | test_put_balance_malformed_id_returns_404 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
+| — | test_put_balance_non_hr_admin_caller_gets_403 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
+| — | test_put_balance_requires_non_empty_note_returns_422 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
+| — | test_put_balance_unknown_id_returns_404 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
+| — | test_put_balance_writes_exactly_one_audit_log_row | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
 | — | the app loads | E2E | Passed | `frontend/e2e/example.spec.ts` |
 <!-- sdlc:auto:end tests -->
