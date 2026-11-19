@@ -59,16 +59,18 @@ def seed_platform_users(session: Session) -> list[str]:
         # an instruction to invent an account.
         if not email or not password:
             continue
-        if _ensure_user(session, email, role):
-            created.append(email)
+        if not _ensure_user(session, email, role):
+            continue
+        # Commit each user on its own: if one insert collides with a concurrent
+        # process, only that one is rolled back, not the other, independent insert.
+        try:
+            session.commit()
+        except IntegrityError:
+            # Another process won the race and created this user. Nothing to do.
+            session.rollback()
+            continue
+        created.append(email)
 
-    if not created:
-        return []
-    try:
-        session.commit()
-    except IntegrityError:
-        # Another process won the race and created the same users. Nothing to do.
-        session.rollback()
-        return []
-    logger.info("Seeded %d platform user(s).", len(created))
+    if created:
+        logger.info("Seeded %d platform user(s).", len(created))
     return created
