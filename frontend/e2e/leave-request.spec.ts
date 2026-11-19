@@ -42,7 +42,10 @@ test("[AC-009] an employee signs in, submits a valid annual request and sees it 
   await expect(row).toBeVisible();
   await expect(row.getByText(/Annual/i)).toBeVisible();
   await expect(row.getByText(/Pending/i)).toBeVisible();
-  await expect(row.getByText("2")).toBeVisible();
+  // Target the working-days cell exactly (3rd column: Dates, Type, Working days, Status,
+  // Manager comment): a plain substring match on the whole row also matches the date
+  // cell "2027-03-01 – 2027-03-02", which is a Playwright strict-mode violation.
+  await expect(row.locator("td").nth(2)).toHaveText("2", { exact: true });
 });
 
 test("[AC-010] submitting with each required field empty in turn creates nothing and shows which field needs completing", async ({

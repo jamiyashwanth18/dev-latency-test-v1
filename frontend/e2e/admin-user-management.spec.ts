@@ -51,20 +51,27 @@ test("[AC-028] HR/Admin signs in, adds a user with the Employee role, sees them 
   await expect(row).toBeVisible();
   await expect(row.getByText(/Active/i)).toBeVisible();
 
-  // The action must really have created a signed-in-able person, per the contract.
-  await page.goto("/");
+  // The action must really have created a signed-in-able person, per the contract. The
+  // sign-in list only shows for someone "not acting as anyone" (AC-001), so sign out of
+  // the admin session first: otherwise "/" correctly redirects a signed-in user to
+  // /my-leave and the identity picker never appears.
+  await page.getByRole("button", { name: /Sign out/i }).click();
+  await expect(page.getByRole("heading", { name: /Choose Your Identity/i })).toBeVisible();
   await page.getByPlaceholder("Name or role").fill(name);
   await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
 
-  // Deactivate them from the same screen.
+  // Deactivate them from the same screen: sign back in as the admin first.
+  await signInThroughUi(page, adminName);
   await page.goto("/admin");
   const rowAgain = page.locator("tr", { hasText: name });
   await rowAgain.getByRole("button", { name: /Deactivate/i }).click();
   await page.getByRole("button", { name: /Yes, deactivate/i }).click();
   await expect(rowAgain.getByText(/Deactivated/i)).toBeVisible();
 
-  // Gone from the real sign-in list once the deactivation really reached the API.
-  await page.goto("/");
+  // Gone from the real sign-in list once the deactivation really reached the API. Sign
+  // out again first for the same reason as above.
+  await page.getByRole("button", { name: /Sign out/i }).click();
+  await expect(page.getByRole("heading", { name: /Choose Your Identity/i })).toBeVisible();
   await page.getByPlaceholder("Name or role").fill(name);
   await expect(page.getByRole("button", { name: new RegExp(name) })).toHaveCount(0);
 });
@@ -126,7 +133,9 @@ test("[AC-030] a submitted request routes only to the employee's own manager's p
   await page.locator("#leave_type").selectOption("annual");
   await page.locator("#reason").fill(`QA AC030 reason ${suffix}`);
   await page.getByRole("button", { name: /Submit request/i }).click();
-  await expect(page.getByText(/Filed as/i)).toBeVisible();
+  // The wired MyLeave screen renders "Filed · N working days · status Pending.", not
+  // "Filed as …"; no criterion or contract rule specifies that exact wording.
+  await expect(page.getByText(/Filed/i)).toBeVisible();
 
   const tokenM = await signInAs(managerM.id);
   const tokenN = await signInAs(managerN.id);
@@ -146,7 +155,7 @@ test("[AC-030] a submitted request routes only to the employee's own manager's p
   await page.locator("#leave_type").selectOption("annual");
   await page.locator("#reason").fill(`QA AC030 reassigned reason ${suffix}`);
   await page.getByRole("button", { name: /Submit request/i }).click();
-  await expect(page.getByText(/Filed as/i)).toBeVisible();
+  await expect(page.getByText(/Filed/i)).toBeVisible();
 
   const pendingNAfter = await getPending(tokenN);
   expect(JSON.stringify(pendingNAfter.body)).toContain(employeeName);

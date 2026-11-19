@@ -46,7 +46,7 @@ describe("App", () => {
         if (init?.method === "DELETE") {
           return Promise.resolve({ ok: true, status: 204, json: async () => undefined });
         }
-        if (url.includes("/users/active")) {
+        if (url.includes("/users/active") || url.includes("/leave-requests/mine")) {
           return Promise.resolve({ ok: true, status: 200, json: async () => [] });
         }
         return Promise.resolve({
