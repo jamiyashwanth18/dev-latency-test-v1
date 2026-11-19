@@ -58,7 +58,12 @@ def run_migrations() -> None:
     from alembic import command
     from alembic.config import Config
 
+    # Read fresh rather than the module-level DATABASE_URL: tests reload settings
+    # (get_settings.cache_clear()) after this module is imported, and this function
+    # must target whatever database is configured now, not at import time.
+    database_url = get_settings().database_url
+
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "migrations"))
-    config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
+    config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
     command.upgrade(config, "head")

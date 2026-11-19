@@ -274,8 +274,12 @@ def check_bucket(needs_endpoint):
         config=config,
         **keys,
     )
+    kwargs = {}
+    owner = setting("AWS_ACCOUNT_ID") or setting("S3_EXPECTED_BUCKET_OWNER")
+    if owner:
+        kwargs["ExpectedBucketOwner"] = owner
     try:
-        client.head_bucket(Bucket=bucket)
+        client.head_bucket(Bucket=bucket, **kwargs)
     except NoCredentialsError:
         return False, "no AWS credentials found"
     except ClientError as exc:

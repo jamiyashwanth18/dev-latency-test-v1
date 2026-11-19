@@ -46,18 +46,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: arn:aws:iam::030157669144:role/aisdlc-2719c341de04-github
           aws-region: us-west-2
 
-      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
       - name: Build and push the API image
         if: env.HAS_API == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@67a2d409c0a876cbe6b11854e3e25193efe4e62d # v6.9.0
         with:
           context: ./backend
           push: true
@@ -67,7 +67,7 @@ jobs:
       - name: Build the frontend
         working-directory: frontend
         run: |
-          npm install --no-audit --no-fund
+          npm install --no-audit --no-fund --ignore-scripts
           npm run build
         env:
           # Baked in at build time: the bundler inlines this into the bundle, so one built
@@ -76,7 +76,6 @@ jobs:
           # the way an AWS-assigned hostname would have to be. The variable name is the
           # frontend's own, because a bundler inlines only its own prefix.
           VITE_API_BASE_URL: https://32-190-6-179.sslip.io/apps/2719c341de04/
-          NEXT_PUBLIC_API_SECRET_KEY: "2719c341-de04-433f-a1d8-8f531051b8af"
           VITE_API_SECRET_KEY: "2719c341-de04-433f-a1d8-8f531051b8af"
 
       - name: Deploy the frontend

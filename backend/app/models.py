@@ -26,6 +26,9 @@ from sqlalchemy import (
     Uuid,
     func,
 )
+from sqlalchemy import false as sa_false
+from sqlalchemy import text as sa_text
+from sqlalchemy import true as sa_true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -74,7 +77,9 @@ class User(Base):
     manager_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=sa_true()
+    )
     # Not in the approved entity list, and deliberately nullable: the platform seeds
     # its two accounts (BOOTSTRAP_ADMIN_EMAIL, SMOKE_TEST_EMAIL) and has to recognise
     # them again on the next startup. Users created in the app have no email -- this
@@ -92,8 +97,13 @@ class User(Base):
     __table_args__ = (Index("ix_users_manager_id", "manager_id"),)
 
 
-class Session(Base):
-    """An opaque bearer token: the only thing that identifies a caller."""
+class UserSession(Base):
+    """An opaque bearer token: the only thing that identifies a caller.
+
+    Named `UserSession`, not `Session`: this codebase also imports
+    `sqlalchemy.orm.Session` (see app/database.py), and a model sharing that name
+    would shadow it the moment both are imported in the same module.
+    """
 
     __tablename__ = "sessions"
 
@@ -133,7 +143,9 @@ class LeaveRequest(Base):
     status: Mapped[str] = mapped_column(
         String(10), nullable=False, default=LeaveStatus.PENDING.value
     )
-    has_overlap: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    has_overlap: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
     manager_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     decided_by: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -164,7 +176,9 @@ class LeaveBalance(Base):
     )
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     allocated_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    adjustment_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    adjustment_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=sa_text("0")
+    )
     adjustment_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
@@ -188,7 +202,9 @@ class Notification(Base):
     leave_request_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("leave_requests.id", ondelete="CASCADE"), nullable=True
     )
-    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_read: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -232,6 +248,6 @@ __all__ = [
     "Notification",
     "NotificationType",
     "Role",
-    "Session",
     "User",
+    "UserSession",
 ]
