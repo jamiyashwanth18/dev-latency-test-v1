@@ -52,10 +52,7 @@ async function signInThroughUi(page: import("@playwright/test").Page, name: stri
   await page.getByRole("button", { name: new RegExp(name) }).click();
 }
 
-async function openAdjustBalancePanel(
-  page: import("@playwright/test").Page,
-  employeeName: string,
-) {
+async function openAdjustBalancePanel(page: import("@playwright/test").Page, employeeName: string) {
   const row = page.locator("tr", { hasText: employeeName });
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /Adjust balance/i }).click();
