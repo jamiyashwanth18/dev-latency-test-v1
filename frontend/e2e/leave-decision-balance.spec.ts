@@ -2,13 +2,7 @@ import { expect, test } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
 import { adminCredentials } from "./support/admin";
-import {
-  createUser,
-  decideLeaveRequest,
-  getMine,
-  signInAs,
-  signInAsAdmin,
-} from "./support/api";
+import { createUser, decideLeaveRequest, getMine, signInAs, signInAsAdmin } from "./support/api";
 
 // [US-007-3] Employee dashboard: request statuses after a manager decision, and the
 // annual balance rules. The decision itself is a manager action with no wired screen
@@ -55,7 +49,10 @@ test("[AC-014][AC-015] an employee's request shows Pending with its dates, type 
 
   const mineBeforeDecision = await getMine(await signInAs(employee.id));
   const requestId = (mineBeforeDecision.body as Array<{ id: string }>)[0]?.id;
-  expect(requestId, "GET /leave-requests/mine returned no row for the submitted request").toBeTruthy();
+  expect(
+    requestId,
+    "GET /leave-requests/mine returned no row for the submitted request",
+  ).toBeTruthy();
 
   const managerToken = await signInAs(manager.id);
   const comment = `QA AC014 approved — cover arranged ${suffix}`;
