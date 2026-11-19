@@ -28,10 +28,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<{ status: n
 // row from only the email the platform gave it.
 export function derivedDisplayName(email: string): string {
   const localPart = email.split("@", 1)[0] ?? email;
-  const words = localPart
-    .replace(/[._]/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
+  const words = localPart.replace(/[._]/g, " ").split(/\s+/).filter(Boolean);
   const name = words.map((w) => w[0]!.toUpperCase() + w.slice(1).toLowerCase()).join(" ");
   return name.slice(0, 200) || email.slice(0, 200);
 }

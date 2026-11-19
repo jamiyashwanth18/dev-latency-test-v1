@@ -1,5 +1,5 @@
 // @ts-nocheck -- kept consistent with the other generated screens' JS runtime contract.
- 
+
 import React from "react";
 
 import * as UI from "@/lib/ui";
