@@ -46,10 +46,12 @@ export default function Screen() {
   const [listError, setListError] = React.useState("");
   const [requests, setRequests] = React.useState<PendingRequest[]>([]);
 
+  // Only one row's decision panel can be open at a time, so its comment and
+  // any errors are kept against that single selection rather than per-id maps.
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [comment, setComment] = React.useState("");
-  const [commentErrors, setCommentErrors] = React.useState<Record<string, string>>({});
-  const [decisionErrors, setDecisionErrors] = React.useState<Record<string, string>>({});
+  const [commentError, setCommentError] = React.useState("");
+  const [decisionError, setDecisionError] = React.useState("");
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
@@ -81,8 +83,8 @@ export default function Screen() {
   function openRequest(id: string) {
     setSelectedId(id);
     setComment("");
-    setCommentErrors((prev) => ({ ...prev, [id]: "" }));
-    setDecisionErrors((prev) => ({ ...prev, [id]: "" }));
+    setCommentError("");
+    setDecisionError("");
   }
 
   function closePanel() {
@@ -93,11 +95,11 @@ export default function Screen() {
   async function decide(r: PendingRequest, decision: "approve" | "reject") {
     if (busyId) return;
     if (!comment.trim()) {
-      setCommentErrors((prev) => ({ ...prev, [r.id]: "A comment is required." }));
+      setCommentError("A comment is required.");
       return;
     }
-    setCommentErrors((prev) => ({ ...prev, [r.id]: "" }));
-    setDecisionErrors((prev) => ({ ...prev, [r.id]: "" }));
+    setCommentError("");
+    setDecisionError("");
     setBusyId(r.id);
     try {
       await apiFetch(`/leave-requests/${r.id}/decision`, {
@@ -113,15 +115,9 @@ export default function Screen() {
         return;
       }
       if (err instanceof ApiError && (err.status === 403 || err.status === 409)) {
-        setDecisionErrors((prev) => ({
-          ...prev,
-          [r.id]: err.message || "Could not record that decision.",
-        }));
+        setDecisionError(err.message || "Could not record that decision.");
       } else {
-        setDecisionErrors((prev) => ({
-          ...prev,
-          [r.id]: err instanceof Error ? err.message : "Could not record that decision. Try again.",
-        }));
+        setDecisionError(err instanceof Error ? err.message : "Could not record that decision. Try again.");
       }
     } finally {
       setBusyId(null);
@@ -215,8 +211,6 @@ export default function Screen() {
                 <TBody>
                   {requests.map((r) => {
                     const isSelected = r.id === selectedId;
-                    const commentError = commentErrors[r.id];
-                    const decisionError = decisionErrors[r.id];
                     const isBusy = busyId === r.id;
                     return (
                       <React.Fragment key={r.id}>
@@ -269,7 +263,7 @@ export default function Screen() {
                                   value={comment}
                                   onChange={(e) => {
                                     setComment(e.target.value);
-                                    setCommentErrors((prev) => ({ ...prev, [r.id]: "" }));
+                                    setCommentError("");
                                   }}
                                   aria-invalid={commentError ? "true" : undefined}
                                   aria-describedby={
