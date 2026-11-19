@@ -246,7 +246,6 @@ def check_bucket(needs_endpoint):
     endpoint = setting("S3_ENDPOINT_URL") or None
     if needs_endpoint and not endpoint:
         return False, "S3_ENDPOINT_URL is not set"
-    expected_owner = setting("S3_EXPECTED_BUCKET_OWNER") or None
     try:
         import boto3
         from botocore.config import Config
@@ -275,11 +274,8 @@ def check_bucket(needs_endpoint):
         config=config,
         **keys,
     )
-    head_bucket_kwargs = {"Bucket": bucket}
-    if expected_owner:
-        head_bucket_kwargs["ExpectedBucketOwner"] = expected_owner
     try:
-        client.head_bucket(**head_bucket_kwargs)
+        client.head_bucket(Bucket=bucket)
     except NoCredentialsError:
         return False, "no AWS credentials found"
     except ClientError as exc:

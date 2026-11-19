@@ -7,7 +7,22 @@ import { Icons } from "@/lib/icons";
 import { brand } from "@/lib/brand";
 import { apiFetch, ApiError, clearSessionToken } from "@/lib/api";
 
-const { Button, Input, Select, Badge, Table, THead, TBody, TR, TH, TD, Avatar, Empty } = UI;
+const {
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Select,
+  Badge,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  Avatar,
+  Empty,
+} = UI;
 
 const { Plus, Check, X, AlertCircle } = Icons;
 
@@ -20,6 +35,17 @@ const ROLE_OPTIONS = [
 function roleLabel(role) {
   const found = ROLE_OPTIONS.find((r) => r.value === role);
   return found ? found.label : role;
+}
+
+function nameAndRoleErrors(full_name, role) {
+  const errs = {};
+  if (!full_name.trim()) errs.full_name = "Full name is required.";
+  if (!role) errs.role = "Role is required.";
+  return errs;
+}
+
+function errorMessage(err, fallback) {
+  return err instanceof ApiError ? err.message : fallback;
 }
 
 export default function Screen() {
@@ -43,6 +69,13 @@ export default function Screen() {
   const [rowServerError, setRowServerError] = React.useState({});
   const [confirmId, setConfirmId] = React.useState(null);
   const [savingId, setSavingId] = React.useState(null);
+
+  const [balanceId, setBalanceId] = React.useState(null);
+  const [balanceDraft, setBalanceDraft] = React.useState({ new_remaining_days: "", note: "" });
+  const [balanceErrors, setBalanceErrors] = React.useState({});
+  const [balanceServerError, setBalanceServerError] = React.useState("");
+  const [balanceSavingId, setBalanceSavingId] = React.useState(null);
+  const [remainingDaysById, setRemainingDaysById] = React.useState({});
 
   const loadMe = React.useCallback(() => {
     setMeState("loading");
@@ -102,15 +135,8 @@ export default function Screen() {
     setNewUserServerError("");
   }
 
-  function validateNewUser() {
-    const errs = {};
-    if (!newUser.full_name.trim()) errs.full_name = "Full name is required.";
-    if (!newUser.role) errs.role = "Role is required.";
-    return errs;
-  }
-
   async function submitNewUser() {
-    const errs = validateNewUser();
+    const errs = nameAndRoleErrors(newUser.full_name, newUser.role);
     setNewUserErrors(errs);
     setNewUserServerError("");
     if (Object.keys(errs).length) return;
@@ -151,9 +177,7 @@ export default function Screen() {
   }
 
   async function saveEdit(u) {
-    const errs = {};
-    if (!editDraft.full_name.trim()) errs.full_name = "Full name is required.";
-    if (!editDraft.role) errs.role = "Role is required.";
+    const errs = nameAndRoleErrors(editDraft.full_name, editDraft.role);
     setEditErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -173,7 +197,7 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not save that change.",
+        [u.id]: errorMessage(err, "Could not save that change."),
       }));
     } finally {
       setSavingId(null);
@@ -192,10 +216,67 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not update the manager.",
+        [u.id]: errorMessage(err, "Could not update the manager."),
       }));
     } finally {
       setSavingId(null);
+    }
+  }
+
+  function startBalance(u) {
+    setBalanceId(u.id);
+    setBalanceDraft({ new_remaining_days: "", note: "" });
+    setBalanceErrors({});
+    setBalanceServerError("");
+  }
+
+  function cancelBalance() {
+    setBalanceId(null);
+    setBalanceDraft({ new_remaining_days: "", note: "" });
+    setBalanceErrors({});
+    setBalanceServerError("");
+  }
+
+  function validateBalance(draft) {
+    const errs = {};
+    const rawDays = draft.new_remaining_days;
+    const num = Number(rawDays);
+    if (rawDays === "" || !Number.isInteger(num)) {
+      errs.new_remaining_days = "Enter a whole number of days.";
+    }
+    if (!draft.note.trim()) errs.note = "A note is required.";
+    return errs;
+  }
+
+  async function submitBalance(u) {
+    const errs = validateBalance(balanceDraft);
+    setBalanceErrors(errs);
+    setBalanceServerError("");
+    if (Object.keys(errs).length) return;
+
+    setBalanceSavingId(u.id);
+    try {
+      const year = new Date().getUTCFullYear();
+      const result = await apiFetch(`/admin/users/${u.id}/balance`, {
+        method: "PUT",
+        body: JSON.stringify({
+          year,
+          new_remaining_days: Number(balanceDraft.new_remaining_days),
+          note: balanceDraft.note.trim(),
+        }),
+      });
+      setRemainingDaysById((prev) => ({ ...prev, [u.id]: result.remaining_days }));
+      setBalanceId(null);
+      setBalanceDraft({ new_remaining_days: "", note: "" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSessionToken();
+        window.location.href = "/sign-in";
+        return;
+      }
+      setBalanceServerError(errorMessage(err, "Could not save that balance change."));
+    } finally {
+      setBalanceSavingId(null);
     }
   }
 
@@ -224,7 +305,7 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not deactivate that user.",
+        [u.id]: errorMessage(err, "Could not deactivate that user."),
       }));
     } finally {
       setSavingId(null);
@@ -324,6 +405,7 @@ export default function Screen() {
                 <TH scope="col">Role</TH>
                 <TH scope="col">Manager</TH>
                 <TH scope="col">Status</TH>
+                <TH scope="col">Remaining balance</TH>
                 <TH scope="col">
                   <span className="sr-only">Actions</span>
                 </TH>
@@ -386,6 +468,9 @@ export default function Screen() {
                     <span style={{ color: brand.neutralColor }}>—</span>
                   </TD>
                   <TD>
+                    <span style={{ color: brand.neutralColor }}>—</span>
+                  </TD>
+                  <TD>
                     <div className="flex gap-2">
                       <Button type="button" onClick={submitNewUser} disabled={creating}>
                         {creating ? "Creating…" : "Create user"}
@@ -414,156 +499,267 @@ export default function Screen() {
                 const serverError = rowServerError[u.id];
                 const managerName =
                   u.manager_id && byId[u.manager_id] ? byId[u.manager_id].full_name : "";
+                const isAdjustingBalance = balanceId === u.id;
+                const isSavingBalance = balanceSavingId === u.id;
+                const remainingDays = remainingDaysById[u.id];
                 return (
-                  <TR key={u.id}>
-                    <TD>
-                      {isEditing ? (
-                        <>
-                          <Input
-                            aria-label={`Full name for ${u.full_name}`}
-                            value={editDraft.full_name}
-                            onChange={(e) =>
-                              setEditDraft((prev) => ({ ...prev, full_name: e.target.value }))
-                            }
-                          />
-                          {editErrors.full_name ? (
-                            <p role="alert" className="mt-1 text-xs text-red-700">
-                              {editErrors.full_name}
-                            </p>
-                          ) : null}
-                        </>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Avatar name={u.full_name} />
-                          <span>{u.full_name}</span>
-                        </div>
-                      )}
-                    </TD>
-                    <TD>
-                      {isEditing ? (
-                        <>
+                  <React.Fragment key={u.id}>
+                    <TR>
+                      <TD>
+                        {isEditing ? (
+                          <>
+                            <Input
+                              aria-label={`Full name for ${u.full_name}`}
+                              value={editDraft.full_name}
+                              onChange={(e) =>
+                                setEditDraft((prev) => ({ ...prev, full_name: e.target.value }))
+                              }
+                            />
+                            {editErrors.full_name ? (
+                              <p role="alert" className="mt-1 text-xs text-red-700">
+                                {editErrors.full_name}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Avatar name={u.full_name} />
+                            <span>{u.full_name}</span>
+                          </div>
+                        )}
+                      </TD>
+                      <TD>
+                        {isEditing ? (
+                          <>
+                            <Select
+                              aria-label={`Role for ${u.full_name}`}
+                              value={editDraft.role}
+                              onChange={(e) =>
+                                setEditDraft((prev) => ({ ...prev, role: e.target.value }))
+                              }
+                            >
+                              {ROLE_OPTIONS.map((r) => (
+                                <option key={r.value} value={r.value}>
+                                  {r.label}
+                                </option>
+                              ))}
+                            </Select>
+                            {editErrors.role ? (
+                              <p role="alert" className="mt-1 text-xs text-red-700">
+                                {editErrors.role}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <Badge>{roleLabel(u.role)}</Badge>
+                        )}
+                      </TD>
+                      <TD>
+                        {u.role === "employee" ? (
                           <Select
-                            aria-label={`Role for ${u.full_name}`}
-                            value={editDraft.role}
-                            onChange={(e) =>
-                              setEditDraft((prev) => ({ ...prev, role: e.target.value }))
-                            }
+                            aria-label={`Manager for ${u.full_name}`}
+                            value={u.manager_id || ""}
+                            disabled={isSaving}
+                            onChange={(e) => changeManager(u, e.target.value || null)}
                           >
-                            {ROLE_OPTIONS.map((r) => (
-                              <option key={r.value} value={r.value}>
-                                {r.label}
+                            <option value="">Unassigned</option>
+                            {managers.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.full_name}
                               </option>
                             ))}
                           </Select>
-                          {editErrors.role ? (
-                            <p role="alert" className="mt-1 text-xs text-red-700">
-                              {editErrors.role}
-                            </p>
-                          ) : null}
-                        </>
-                      ) : (
-                        <Badge>{roleLabel(u.role)}</Badge>
-                      )}
-                    </TD>
-                    <TD>
-                      {u.role === "employee" ? (
-                        <Select
-                          aria-label={`Manager for ${u.full_name}`}
-                          value={u.manager_id || ""}
-                          disabled={isSaving}
-                          onChange={(e) => changeManager(u, e.target.value || null)}
-                        >
-                          <option value="">Unassigned</option>
-                          {managers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.full_name}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : (
-                        <span style={{ color: brand.neutralColor }}>{managerName || "—"}</span>
-                      )}
-                    </TD>
-                    <TD>
-                      {u.is_active ? (
-                        <Badge variant="success" className="inline-flex items-center gap-1">
-                          <Check className="h-3 w-3" aria-hidden="true" />
-                          Active
-                        </Badge>
-                      ) : (
-                        <div>
-                          <Badge variant="default" className="inline-flex items-center gap-1">
-                            <X className="h-3 w-3" aria-hidden="true" />
-                            Deactivated
+                        ) : (
+                          <span style={{ color: brand.neutralColor }}>{managerName || "—"}</span>
+                        )}
+                      </TD>
+                      <TD>
+                        {u.is_active ? (
+                          <Badge variant="success" className="inline-flex items-center gap-1">
+                            <Check className="h-3 w-3" aria-hidden="true" />
+                            Active
                           </Badge>
-                          <p className="mt-1 text-xs" style={{ color: brand.neutralColor }}>
-                            This person can no longer sign in.
-                          </p>
-                        </div>
-                      )}
-                    </TD>
-                    <TD>
-                      {isConfirming ? (
-                        <div className="flex flex-col gap-2">
-                          <p className="text-xs">
-                            Deactivate {u.full_name}? They will be signed out everywhere.
-                          </p>
+                        ) : (
+                          <div>
+                            <Badge variant="default" className="inline-flex items-center gap-1">
+                              <X className="h-3 w-3" aria-hidden="true" />
+                              Deactivated
+                            </Badge>
+                            <p className="mt-1 text-xs" style={{ color: brand.neutralColor }}>
+                              This person can no longer sign in.
+                            </p>
+                          </div>
+                        )}
+                      </TD>
+                      <TD>
+                        {remainingDays !== undefined ? (
+                          <span>{remainingDays} days</span>
+                        ) : (
+                          <span style={{ color: brand.neutralColor }}>—</span>
+                        )}
+                      </TD>
+                      <TD>
+                        {isConfirming ? (
+                          <div className="flex flex-col gap-2">
+                            <p className="text-xs">
+                              Deactivate {u.full_name}? They will be signed out everywhere.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="danger"
+                                disabled={isSaving}
+                                onClick={() => confirmDeactivate(u)}
+                              >
+                                Yes, deactivate
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={cancelDeactivate}
+                                disabled={isSaving}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : isEditing ? (
                           <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant="danger"
-                              disabled={isSaving}
-                              onClick={() => confirmDeactivate(u)}
-                            >
-                              Yes, deactivate
+                            <Button type="button" onClick={() => saveEdit(u)} disabled={isSaving}>
+                              {isSaving ? "Saving…" : "Save"}
                             </Button>
                             <Button
                               type="button"
                               variant="secondary"
-                              onClick={cancelDeactivate}
+                              onClick={cancelEdit}
                               disabled={isSaving}
                             >
                               Cancel
                             </Button>
                           </div>
-                        </div>
-                      ) : isEditing ? (
-                        <div className="flex gap-2">
-                          <Button type="button" onClick={() => saveEdit(u)} disabled={isSaving}>
-                            {isSaving ? "Saving…" : "Save"}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={cancelEdit}
-                            disabled={isSaving}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Button type="button" variant="secondary" onClick={() => startEdit(u)}>
-                            Edit
-                          </Button>
-                          {u.is_active ? (
-                            <Button type="button" variant="danger" onClick={() => askDeactivate(u)}>
-                              Deactivate
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            <Button type="button" variant="secondary" onClick={() => startEdit(u)}>
+                              Edit
                             </Button>
-                          ) : null}
-                        </div>
-                      )}
-                      {serverError ? (
-                        <p
-                          role="alert"
-                          className="mt-2 flex items-start gap-1 text-xs text-red-700"
-                        >
-                          <AlertCircle className="mt-[1px] h-3 w-3 shrink-0" aria-hidden="true" />
-                          {serverError}
-                        </p>
-                      ) : null}
-                    </TD>
-                  </TR>
+                            {u.is_active ? (
+                              <Button
+                                type="button"
+                                variant="danger"
+                                onClick={() => askDeactivate(u)}
+                              >
+                                Deactivate
+                              </Button>
+                            ) : null}
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              onClick={() =>
+                                isAdjustingBalance ? cancelBalance() : startBalance(u)
+                              }
+                            >
+                              {isAdjustingBalance ? "Close" : "Adjust balance"}
+                            </Button>
+                          </div>
+                        )}
+                        {serverError ? (
+                          <p
+                            role="alert"
+                            className="mt-2 flex items-start gap-1 text-xs text-red-700"
+                          >
+                            <AlertCircle className="mt-[1px] h-3 w-3 shrink-0" aria-hidden="true" />
+                            {serverError}
+                          </p>
+                        ) : null}
+                      </TD>
+                    </TR>
+                    {isAdjustingBalance ? (
+                      <TR>
+                        <TD colSpan={6}>
+                          <div
+                            className="p-4"
+                            style={{
+                              border: `3px solid ${ink}`,
+                              borderRadius: 0,
+                              boxShadow: `6px 6px 0 ${ink}`,
+                              backgroundColor: surface,
+                            }}
+                          >
+                            <p className="mb-3 text-sm">Adjust balance for {u.full_name}</p>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              <div>
+                                <Label htmlFor={`balance-days-${u.id}`}>New remaining days</Label>
+                                <Input
+                                  id={`balance-days-${u.id}`}
+                                  type="number"
+                                  step="1"
+                                  value={balanceDraft.new_remaining_days}
+                                  onChange={(e) =>
+                                    setBalanceDraft((prev) => ({
+                                      ...prev,
+                                      new_remaining_days: e.target.value,
+                                    }))
+                                  }
+                                  aria-invalid={!!balanceErrors.new_remaining_days}
+                                />
+                                {balanceErrors.new_remaining_days ? (
+                                  <p role="alert" className="mt-1 text-xs text-red-700">
+                                    {balanceErrors.new_remaining_days}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div>
+                                <Label htmlFor={`balance-note-${u.id}`}>Note</Label>
+                                <Textarea
+                                  id={`balance-note-${u.id}`}
+                                  rows={2}
+                                  value={balanceDraft.note}
+                                  onChange={(e) =>
+                                    setBalanceDraft((prev) => ({ ...prev, note: e.target.value }))
+                                  }
+                                  aria-invalid={!!balanceErrors.note}
+                                />
+                                {balanceErrors.note ? (
+                                  <p role="alert" className="mt-1 text-xs text-red-700">
+                                    {balanceErrors.note}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="mt-4 flex gap-2">
+                              <Button
+                                type="button"
+                                onClick={() => submitBalance(u)}
+                                disabled={isSavingBalance}
+                              >
+                                {isSavingBalance ? "Saving…" : "Save balance"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={cancelBalance}
+                                disabled={isSavingBalance}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                            {balanceServerError ? (
+                              <p
+                                role="alert"
+                                className="mt-2 flex items-start gap-1 text-xs text-red-700"
+                              >
+                                <AlertCircle
+                                  className="mt-[1px] h-3 w-3 shrink-0"
+                                  aria-hidden="true"
+                                />
+                                {balanceServerError}
+                              </p>
+                            ) : null}
+                          </div>
+                        </TD>
+                      </TR>
+                    ) : null}
+                  </React.Fragment>
                 );
               })}
             </TBody>
