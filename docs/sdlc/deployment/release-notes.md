@@ -3,6 +3,15 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start releases -->
+## 8bd31fa28ea4 — 2026-11-19
+
+**Commit:** `8bd31fa`
+
+**Delivered:**
+- US-010: Approve or reject a request with a comment
+- US-011: Be prevented from over-approving annual leave
+- US-016: Adjust leave balances
+
 ## 9ebe10f9dc8c — 2026-11-19
 
 **Commit:** `9ebe10f`
