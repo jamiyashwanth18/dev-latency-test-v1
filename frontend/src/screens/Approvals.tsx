@@ -7,9 +7,8 @@ import { Icons } from "@/lib/icons";
 import { brand } from "@/lib/brand";
 import { useNavigate } from "@/lib/navigate";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { Button, Textarea, Label, Table, THead, TBody, TR, TH, TD, Avatar, Empty } = UI;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const { X, ChevronRight, Bell, Calendar, Clock, ArrowRight, AlertCircle, CheckCircle } = Icons;
 
 const MANAGER = { full_name: "Priya Raman", role: "Manager", reports: 3 };
@@ -280,8 +279,8 @@ export default function Screen() {
                         {d.action === "approve" && d.leave_type === "annual"
                           ? `${d.working_days} days deducted — ${d.left} of 20 days left.`
                           : d.action === "approve"
-                          ? "Annual balance unchanged (sick leave)."
-                          : "No balance deducted."}
+                            ? "Annual balance unchanged (sick leave)."
+                            : "No balance deducted."}
                       </span>
                       <span>
                         Audit entry {d.audit} recorded {d.time}.
@@ -389,9 +388,7 @@ export default function Screen() {
                           <div
                             className="flex items-start gap-3"
                             style={{
-                              boxShadow: isSelected
-                                ? `inset 4px 0 0 ${brand.accentColor}`
-                                : "none",
+                              boxShadow: isSelected ? `inset 4px 0 0 ${brand.accentColor}` : "none",
                               paddingLeft: isSelected ? 10 : 0,
                             }}
                           >
@@ -441,19 +438,25 @@ export default function Screen() {
                         <TD className="px-4 py-5 max-w-[240px]">
                           <p className="text-[13px] leading-[1.55]">{r.reason}</p>
                           {r.leave_type === "sick" && (
-                            <p className="mt-1 text-[10px] uppercase tracking-[0.14em]" style={{ color: brand.neutralColor }}>
+                            <p
+                              className="mt-1 text-[10px] uppercase tracking-[0.14em]"
+                              style={{ color: brand.neutralColor }}
+                            >
                               Sensitive — manager & HR only
                             </p>
                           )}
                         </TD>
                         <TD className="px-4 py-5">
                           <div className="text-[13px]">{r.remaining} / 20 days</div>
-                          <div className="mt-1 text-[11px]" style={{ color: over ? WARN : brand.neutralColor }}>
+                          <div
+                            className="mt-1 text-[11px]"
+                            style={{ color: over ? WARN : brand.neutralColor }}
+                          >
                             {r.leave_type === "sick"
                               ? "sick does not deduct"
                               : over
-                              ? `short by ${r.working_days - r.remaining} days`
-                              : `${r.remaining - r.working_days} days after approval`}
+                                ? `short by ${r.working_days - r.remaining} days`
+                                : `${r.remaining - r.working_days} days after approval`}
                           </div>
                         </TD>
                         <TD className="px-4 py-5">
@@ -526,7 +529,10 @@ export default function Screen() {
               >
                 Decision panel
               </h2>
-              <p className="mt-3 max-w-[60ch] text-[13px] leading-[1.7]" style={{ color: brand.neutralColor }}>
+              <p
+                className="mt-3 max-w-[60ch] text-[13px] leading-[1.7]"
+                style={{ color: brand.neutralColor }}
+              >
                 {requests.length === 0
                   ? "Nothing left to decide today. When a direct report submits leave, open it here to approve or reject with a comment."
                   : "Choose Decide on a row above to review the request and record your decision."}
@@ -551,13 +557,17 @@ export default function Screen() {
                     style={{ fontFamily: brand.fontHeading }}
                   >
                     {`Decide: ${selected.employee}, ${selected.dates}, ${typeLabel(
-                      selected.leave_type
+                      selected.leave_type,
                     )}, ${selected.working_days} working days`}
                   </h2>
                 </div>
                 <Button
                   className="bs-focus bs-ghost shrink-0 p-2"
-                  style={{ border: `3px solid ${ink}`, borderRadius: brand.radius, backgroundColor: "transparent" }}
+                  style={{
+                    border: `3px solid ${ink}`,
+                    borderRadius: brand.radius,
+                    backgroundColor: "transparent",
+                  }}
                   aria-label="Close decision panel"
                   onClick={() => {
                     setSelectedId(null);
@@ -576,9 +586,12 @@ export default function Screen() {
                     {panelSentence(selected)}
                   </p>
                   {selected.leave_type === "sick" && (
-                    <p className="mt-3 text-[12px] leading-[1.7]" style={{ color: brand.neutralColor }}>
-                      Sick-leave reason: visible to {selected.first}, to you as their manager, and to
-                      HR/Admin. It is never shown on the team calendar.
+                    <p
+                      className="mt-3 text-[12px] leading-[1.7]"
+                      style={{ color: brand.neutralColor }}
+                    >
+                      Sick-leave reason: visible to {selected.first}, to you as their manager, and
+                      to HR/Admin. It is never shown on the team calendar.
                     </p>
                   )}
                   {selected.has_overlap && (
@@ -641,7 +654,11 @@ export default function Screen() {
                     aria-invalid={error ? "true" : undefined}
                     disabled={!!busy}
                   />
-                  <p id="comment-help" className="mt-2 text-[11px] leading-[1.6]" style={{ color: brand.neutralColor }}>
+                  <p
+                    id="comment-help"
+                    className="mt-2 text-[11px] leading-[1.6]"
+                    style={{ color: brand.neutralColor }}
+                  >
                     {selected.first} sees this comment on their request. It is written to the audit
                     log with your name and the time.
                   </p>
@@ -677,7 +694,11 @@ export default function Screen() {
                       disabled={blocked || !!busy}
                       aria-describedby={blocked ? "approve-blocked" : undefined}
                     >
-                      {busy === "approve" ? "Recording…" : blocked ? "Approve (blocked)" : "Approve"}
+                      {busy === "approve"
+                        ? "Recording…"
+                        : blocked
+                          ? "Approve (blocked)"
+                          : "Approve"}
                     </Button>
                   </div>
                   <div className="col-span-12 sm:col-span-6 md:col-span-3">
