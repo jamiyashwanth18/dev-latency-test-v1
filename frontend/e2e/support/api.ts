@@ -179,3 +179,22 @@ export async function putAdminBalance(
     body: JSON.stringify(payload),
   });
 }
+
+// GET /admin/audit-log as an HR/Admin bearer token: the append-only audit trail, per
+// the contract (actor_user_id, action_type, created_at, jsonb detail), newest first.
+export async function getAuditLog(adminToken: string): Promise<{ status: number; body: unknown }> {
+  return request("/admin/audit-log", { headers: { Authorization: `Bearer ${adminToken}` } });
+}
+
+// POST /leave-requests as a given bearer token: used so this suite can submit a
+// request directly when the UI journey is not the behaviour under test.
+export async function submitLeaveRequest(
+  token: string,
+  payload: { start_date: string; end_date: string; leave_type: "annual" | "sick"; reason: string },
+): Promise<{ status: number; body: unknown }> {
+  return request("/leave-requests", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
