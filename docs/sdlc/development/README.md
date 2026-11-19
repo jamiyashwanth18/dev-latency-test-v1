@@ -3,57 +3,27 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start narrative -->
-### DEV-US-006 · approved · source: dev:US-006
+### DEV-US-010 · approved · source: dev:US-010
 
-Delivered functionality to warn users about overlapping leave requests.
+Implements manager ability to approve or reject a pending leave request and attach a comment to the decision.
 
-Ticket US-006 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a.
+Ticket US-010: 'Approve or reject a request with a comment' - status=delivered. Commit: 5aae296d9b130101377ce2bdd1079c5ce36a7bca.
 
-**Related:** US-006
+**Related:** US-010, US-011
 
-### DEV-US-007 · approved · source: dev:US-007
+### DEV-US-011 · approved · source: dev:US-011
 
-Delivered functionality for employees to view their leave requests and status.
+Adds a safeguard preventing managers from approving annual leave that would exceed an employee's remaining balance.
 
-Ticket US-007 status=delivered. Commit 7237d2f70ca25ff3908c6be6dd408dd40743290b.
+Ticket US-011: 'Be prevented from over-approving annual leave' - status=delivered. Commit: 5aae296d9b130101377ce2bdd1079c5ce36a7bca (same commit as US-010, suggesting both were delivered together).
 
-**Related:** US-007
+**Related:** US-011, US-010, US-016
 
-### DEV-US-008 · approved · source: dev:US-008
+### DEV-US-016 · approved · source: dev:US-016
 
-Delivered functionality to show remaining annual leave balance to employees.
+Provides functionality to adjust an employee's leave balance.
 
-Ticket US-008 status=delivered. Commit 7237d2f70ca25ff3908c6be6dd408dd40743290b (same commit as US-007).
+Ticket US-016: 'Adjust leave balances' - status=delivered. Commit: 32c7666bda1931ab87e7af2de29a6922372e6cb5.
 
-**Related:** US-008
-
-### DEV-US-009 · approved · source: dev:US-009
-
-Delivered functionality for managers to review pending requests from direct reports.
-
-Ticket US-009 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006).
-
-**Related:** US-009
-
-### DEV-US-020 · approved · source: dev:US-020
-
-Delivered access restriction so sick-leave reasons are only visible to authorized roles.
-
-Ticket US-020 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006 and US-009).
-
-**Related:** US-020
-
-### DEV-US-021 · approved · source: dev:US-021
-
-Delivered getting-started guidance accessible within the app.
-
-Ticket US-021 status=delivered. Commit c6d2d2b008c471364692ed0474223818666c310a (same commit as US-006, US-009, US-020).
-
-**Related:** US-021
-
-### DEV-US-FIX-1 · approved · source: dev:US-FIX-1
-
-Fixed failing checks left over from the project scaffold; not tied to a specific user story.
-
-Ticket US-FIX-1 status=delivered. Commit 8d34cb11bb8c2096def9da3e646191969bf9085d. No requirement key provided for this ticket.
+**Related:** US-016, US-011
 <!-- sdlc:auto:end narrative -->

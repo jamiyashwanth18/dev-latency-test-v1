@@ -5,10 +5,11 @@
 <!-- sdlc:auto:start endpoints -->
 | Method | Path | Handler | Source | Summary |
 |---|---|---|---|---|
-| GET | /admin/users | list_users | `backend/app/routers/admin.py:71` | — |
-| POST | /admin/users | create_user | `backend/app/routers/admin.py:80` | — |
-| PATCH | /admin/users/{id} | update_user | `backend/app/routers/admin.py:104` | — |
-| PUT | /admin/users/{id}/balance | adjust_balance | `backend/app/routers/admin.py:158` | — |
+| GET | /admin/audit-log | list_audit_log | `backend/app/routers/admin.py:72` | — |
+| GET | /admin/users | list_users | `backend/app/routers/admin.py:93` | — |
+| POST | /admin/users | create_user | `backend/app/routers/admin.py:102` | — |
+| PATCH | /admin/users/{id} | update_user | `backend/app/routers/admin.py:126` | — |
+| PUT | /admin/users/{id}/balance | adjust_balance | `backend/app/routers/admin.py:180` | — |
 | GET | /balances/mine | get_my_balance | `backend/app/routers/balances.py:86` | — |
 | GET | /health | health | `backend/app/main.py:75` | Liveness probe, and the only route here that is not a stub. |
 | POST | /leave-requests | create_leave_request | `backend/app/routers/leave_requests.py:107` | — |
@@ -24,7 +25,6 @@
 <!-- sdlc:auto:start drift -->
 **Designed but missing:**
 
-- GET /admin/audit-log
 - GET /calendar
 - GET /docs/getting-started
 - GET /notifications
@@ -32,5 +32,5 @@
 <!-- sdlc:auto:end drift -->
 
 <!-- sdlc:auto:start source -->
-Generated from commit `9ebe10f`
+Generated from commit `8bd31fa`
 <!-- sdlc:auto:end source -->

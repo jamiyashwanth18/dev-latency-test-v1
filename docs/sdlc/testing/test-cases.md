@@ -3,9 +3,9 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start summary -->
-154 tests · Passed 145 · Failed 0 · Skipped 0 · Not run 9
+179 tests · Passed 167 · Failed 10 · Skipped 2 · Not run 0
 
-Acceptance criteria covered: 21/41 · passing: 14/41
+Acceptance criteria covered: 26/41 · passing: 18/41
 <!-- sdlc:auto:end summary -->
 
 <!-- sdlc:auto:start tests -->
@@ -130,9 +130,9 @@ Acceptance criteria covered: 21/41 · passing: 14/41
 | — | test_balance_shape_and_formula | Integration | Passed | `backend/tests/unit/test_balances.py` |
 | — | test_only_approved_annual_requests_are_deducted | Integration | Passed | `backend/tests/unit/test_balances.py` |
 | — | test_unauthenticated_call_returns_401 | Integration | Passed | `backend/tests/unit/test_balances.py` |
-| AC-014, AC-015 | [AC-014][AC-015] an employee's request shows Pending with its dates, type and working days, then Approved with the manager's comment after a decision, and offers no way to resubmit it | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
-| AC-015 | [AC-015] a rejected request shows Rejected with the manager's comment after reloading | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
-| AC-016 | [AC-016] the balance panel shows a remaining 20 days and drops by the approved annual request's working days | E2E | Not run yet | `frontend/e2e/leave-decision-balance.spec.ts` |
+| AC-014, AC-015 | [AC-014][AC-015] an employee's request shows Pending with its dates, type and working days, then Approved with the manager's comment after a decision, and offers no way to resubmit it | E2E | Failed | `frontend/e2e/leave-decision-balance.spec.ts` |
+| AC-015 | [AC-015] a rejected request shows Rejected with the manager's comment after reloading | E2E | Failed | `frontend/e2e/leave-decision-balance.spec.ts` |
+| AC-016 | [AC-016] the balance panel shows a remaining 20 days and drops by the approved annual request's working days | E2E | Failed | `frontend/e2e/leave-decision-balance.spec.ts` |
 
 ### US-009: Review pending requests from my direct reports
 
@@ -163,8 +163,8 @@ Acceptance criteria covered: 21/41 · passing: 14/41
 | — | test_sick_request_approval_never_blocked_by_balance | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
 | — | test_unknown_decision_value_returns_422 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
 | — | test_unknown_id_returns_404 | Integration | Passed | `backend/tests/unit/test_leave_decisions.py` |
-| AC-019 | [AC-019] a manager opens Approvals and sees a direct report's pending request with employee, dates, type, working days, reason, remaining balance and overlap flag, then approves it with a comment and the row clears | E2E | Not run yet | `frontend/e2e/approvals.spec.ts` |
-| AC-020 | [AC-020] a second employee reporting to another manager has a pending request that never appears in the first manager's queue | E2E | Not run yet | `frontend/e2e/approvals.spec.ts` |
+| AC-019 | [AC-019] a manager opens Approvals and sees a direct report's pending request with employee, dates, type, working days, reason, remaining balance and overlap flag, then approves it with a comment and the row clears | E2E | Failed | `frontend/e2e/approvals.spec.ts` |
+| AC-020 | [AC-020] a second employee reporting to another manager has a pending request that never appears in the first manager's queue | E2E | Passed | `frontend/e2e/approvals.spec.ts` |
 
 ### US-021: Access getting-started guidance
 
@@ -176,10 +176,45 @@ Acceptance criteria covered: 21/41 · passing: 14/41
 | AC-040 | GettingStarted > [AC-040] filtering by the Manager tab marks submit-leave and HR administration for reference, and keeps approving as applying | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
 | AC-040 | GettingStarted > [AC-040] the Everyone tab marks every card as applying | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
 | AC-041 | GettingStarted > [AC-041] any credential example uses the <set-at-first-login> placeholder and no real secret value | Unit | Passed | `frontend/src/screens/GettingStarted.test.tsx` |
-| AC-040 | [AC-040] a signed-in user opens Getting Started from the navigation and finds guidance for selecting an identity, submitting leave, approving requests and HR administration | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
-| AC-040 | [AC-040] switching the role view marks the guidance that applies to that role | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
-| AC-041 | [AC-041] every credential-like example on the page uses a placeholder, never a real password or token | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
-| NFR-008 | [NFR-008] the Getting Started page renders readably at a mobile viewport | E2E | Not run yet | `frontend/e2e/getting-started.spec.ts` |
+| AC-040 | [AC-040] a signed-in user opens Getting Started from the navigation and finds guidance for selecting an identity, submitting leave, approving requests and HR administration | E2E | Passed | `frontend/e2e/getting-started.spec.ts` |
+| AC-040 | [AC-040] switching the role view marks the guidance that applies to that role | E2E | Failed | `frontend/e2e/getting-started.spec.ts` |
+| AC-041 | [AC-041] every credential-like example on the page uses a placeholder, never a real password or token | E2E | Passed | `frontend/e2e/getting-started.spec.ts` |
+| NFR-008 | [NFR-008] the Getting Started page renders readably at a mobile viewport | E2E | Failed | `frontend/e2e/getting-started.spec.ts` |
+
+## Sprint 4
+
+### US-010: Approve or reject a request with a comment
+
+| Criteria | Test | Level | Result | File |
+|---|---|---|---|---|
+| AC-020 | [AC-020] a manager attempting a decision on a request that is not their direct report's is refused and nothing changes | E2E | Passed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+| AC-021 | [AC-021] a manager approves a direct report's annual request with a comment: it clears the queue, shows Approved with the comment on My Leave, and drops the remaining balance by its working days | E2E | Failed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+| AC-021, NFR-008 | [AC-021][NFR-008] a manager approves a direct report's request with a comment at a mobile viewport | E2E | Failed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+| AC-022 | [AC-022] a manager rejects a pending request with a comment: status becomes Rejected, the comment is visible to the employee, and the remaining balance is unchanged | E2E | Failed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+| AC-023 | [AC-023] approving an annual request longer than the remaining balance is blocked: the UI shows an error naming the remaining balance and the request is still pending afterwards | E2E | Passed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+| AC-024 | [AC-024] approving a sick request succeeds even when the annual balance is zero or negative, and the annual remaining balance is unchanged | E2E | Passed | `frontend/e2e/leave-decision-approve-reject.spec.ts` |
+
+### US-016: Adjust leave balances
+
+| Criteria | Test | Level | Result | File |
+|---|---|---|---|---|
+| AC-031 | Admin balance adjustment > [AC-031] a 401 response clears the stored token and redirects to /sign-in | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] a 403 response shows the HR/Admin-only server message inline | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] a 404 response shows the API detail text inline | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] a 422 response shows the API detail text inline without closing the panel | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] a non-integer new remaining days blocks the request and shows a visible inline validation error | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] an empty or whitespace-only note blocks the request and shows a visible inline validation error | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] each user row offers an 'Adjust balance' action that opens a panel with a numeric days field and a required note field | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] negative new remaining days is accepted and rendered | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | Admin balance adjustment > [AC-031] saving sends PUT /admin/users/{id}/balance with the current UTC year, new_remaining_days and trimmed note, and shows the returned remaining_days, closing the panel | Unit | Passed | `frontend/src/screens/AdminBalance.test.tsx` |
+| AC-031 | [AC-031-API] a balance adjustment is recorded in the audit trail with the acting HR/Admin's identity, a timestamp and the note | E2E | Passed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| AC-031 | [AC-031-EMPTY-NOTE] saving a balance adjustment with an empty note is refused and the employee's balance is unchanged | E2E | Passed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| AC-031 | [AC-031-FORBIDDEN] a non-HR/Admin user cannot reach or perform the balance adjustment, and nothing changes | E2E | Passed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| AC-031 | [AC-031-INTERACTION] an adjustment to N days lets an N-working-day annual approval through, and blocks an N+1-working-day approval with the over-balance message | E2E | Passed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| AC-031 | [AC-031] HR/Admin adjusts an employee's remaining annual balance with a note, the screen shows the new remaining days, and the employee's own balance view reports the same value | E2E | Passed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| AC-031, NFR-008 | [AC-031][NFR-008] the balance-adjustment flow renders and works at a mobile viewport | E2E | Failed | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| NFR-005 | [NFR-005] single EU region, GDPR-aligned hosting | E2E | Skipped | `frontend/e2e/admin-balance-adjustment.spec.ts` |
+| NFR-007 | [NFR-007] sized for a small team | E2E | Skipped | `frontend/e2e/admin-balance-adjustment.spec.ts` |
 
 ## Project setup
 
@@ -194,6 +229,8 @@ Acceptance criteria covered: 21/41 · passing: 14/41
 | — | App > renders a screen inside the app shell and shows its menu | Unit | Passed | `frontend/src/App.test.tsx` |
 | — | test_health_reports_ok | Integration | Passed | `backend/tests/integration/test_health.py` |
 | — | test_the_openapi_document_builds | Integration | Passed | `backend/tests/integration/test_health.py` |
+| — | test_ac_admin_audit_log_requires_hr_admin_and_orders_newest_first | Integration | Passed | `backend/tests/unit/test_admin_audit_log.py` |
+| — | test_ac_admin_audit_log_unauthenticated_returns_401 | Integration | Passed | `backend/tests/unit/test_admin_audit_log.py` |
 | AC-016 | test_ac016_put_balance_sets_remaining_days_and_leaves_allocated_days_unchanged | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
 | — | test_put_balance_malformed_id_returns_404 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
 | — | test_put_balance_non_hr_admin_caller_gets_403 | Integration | Passed | `backend/tests/unit/test_admin_balance.py` |
