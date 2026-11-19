@@ -3,27 +3,27 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start narrative -->
-### TEST-RUN-CHECKS · approved · source: testing:run_checks
+### TEST-RUN-CHECKS · draft · source: testing:run_checks
 
-A full checks run across the project succeeded, with all 12 checks passing.
+Automated checks were run across the project and all passed.
 
-run_checks (ticket=None): status=succeeded, detail="12/12 checks passed". No ticket association given, so this is treated as a project-wide check rather than tied to a specific requirement.
+run_checks (no associated ticket): status=succeeded, detail='12/12 checks passed'. No further breakdown of which checks were run or what they covered was provided in the input.
 
-### TEST-a72e0f90 · approved · source: testing:write_tests:a72e0f90-8586-48d6-87c9-a3fa34fce651
+### TEST-693456ba · draft · source: testing:write_tests:693456ba-2986-4c4a-8738-40912d4bbe1a
 
-Test files were written for ticket a72e0f90-8586-48d6-87c9-a3fa34fce651.
+Test-writing task completed for ticket 693456ba-2986-4c4a-8738-40912d4bbe1a, producing 4 test files.
 
-write_tests (ticket=a72e0f90-8586-48d6-87c9-a3fa34fce651): status=succeeded, detail="4 test file(s)". No mapping to a specific requirement key was provided in the input, so no related requirement is linked.
+write_tests for ticket=693456ba-2986-4c4a-8738-40912d4bbe1a: status=succeeded, detail='4 test file(s)'. The input does not specify which requirements or features these tests cover, so no related requirement ids can be attributed.
 
-### TEST-8716b8f7 · approved · source: testing:write_tests:8716b8f7-1ab3-4bb9-ae8a-76417df07cb7
+### TEST-16912a85 · draft · source: testing:write_tests:16912a85-80d7-47c5-aec9-9b1b00f5d21a
 
-Test files were written for ticket 8716b8f7-1ab3-4bb9-ae8a-76417df07cb7.
+Test-writing task completed for ticket 16912a85-80d7-47c5-aec9-9b1b00f5d21a, producing 4 test files.
 
-write_tests (ticket=8716b8f7-1ab3-4bb9-ae8a-76417df07cb7): status=succeeded, detail="3 test file(s)". No mapping to a specific requirement key was provided in the input, so no related requirement is linked.
+write_tests for ticket=16912a85-80d7-47c5-aec9-9b1b00f5d21a: status=succeeded, detail='4 test file(s)'. The input does not specify which requirements or features these tests cover, so no related requirement ids can be attributed.
 
-### TEST-9158e4db · approved · source: testing:write_tests:9158e4db-a84a-4737-95f7-f3e1016ecb6a
+### TEST-0ac0bbb7 · draft · source: testing:write_tests:0ac0bbb7-c375-42cb-b168-8aec05a5186b
 
-Test files were written for ticket 9158e4db-a84a-4737-95f7-f3e1016ecb6a.
+Test-writing task completed for ticket 0ac0bbb7-c375-42cb-b168-8aec05a5186b, producing 2 test files.
 
-write_tests (ticket=9158e4db-a84a-4737-95f7-f3e1016ecb6a): status=succeeded, detail="4 test file(s)". No mapping to a specific requirement key was provided in the input, so no related requirement is linked.
+write_tests for ticket=0ac0bbb7-c375-42cb-b168-8aec05a5186b: status=succeeded, detail='2 test file(s)'. The input does not specify which requirements or features these tests cover, so no related requirement ids can be attributed.
 <!-- sdlc:auto:end narrative -->
