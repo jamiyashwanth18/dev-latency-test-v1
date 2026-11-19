@@ -65,7 +65,9 @@ function AppShellLayout({ user, onSignOut }: { user: SessionUser; onSignOut: () 
             <span>{user.full_name}</span>
             <button
               type="button"
-              onClick={onSignOut}
+              onClick={() => {
+                void onSignOut();
+              }}
               className="flex items-center gap-2 rounded-[var(--brand-radius)] px-3 py-2 text-sm font-medium text-[var(--brand-fg-muted)] hover:bg-[var(--brand-hover)]"
             >
               <Icons.User size={16} />

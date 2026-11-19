@@ -1,0 +1,34 @@
+{
+  "pending": [
+    {
+      "cause": "the test passes on main before this sprint's code, so it proves nothing new",
+      "criterion": "AC-013",
+      "file": "backend/tests/integration/test_approvals.py",
+      "run_id": "a5bd448a-7779-4142-b00f-9269edb95394",
+      "sprint": 3,
+      "test": "test_ac013_overlapping_request_flagged_not_blocked_and_visible_on_mine_and_pending",
+      "ticket": "US-009",
+      "ticket_id": "16912a85-80d7-47c5-aec9-9b1b00f5d21a"
+    },
+    {
+      "cause": "the test passes on main before this sprint's code, so it proves nothing new",
+      "criterion": "AC-038",
+      "file": "backend/tests/integration/test_approvals.py",
+      "run_id": "a5bd448a-7779-4142-b00f-9269edb95394",
+      "sprint": 3,
+      "test": "test_ac038_sick_reason_hidden_from_unrelated_colleague_and_manager",
+      "ticket": "US-009",
+      "ticket_id": "16912a85-80d7-47c5-aec9-9b1b00f5d21a"
+    },
+    {
+      "cause": "the test passes on main before this sprint's code, so it proves nothing new",
+      "criterion": "AC-039",
+      "file": "backend/tests/integration/test_approvals.py",
+      "run_id": "a5bd448a-7779-4142-b00f-9269edb95394",
+      "sprint": 3,
+      "test": "test_ac039_sick_reason_readable_by_employee_manager_hr_and_annual_reason_never_stripped",
+      "ticket": "US-009",
+      "ticket_id": "16912a85-80d7-47c5-aec9-9b1b00f5d21a"
+    }
+  ]
+}

@@ -156,20 +156,52 @@ class LeaveRequestPublic(BaseModel):
     working_days: int
     status: str
     has_overlap: bool
+    remaining_balance: int
     manager_comment: str | None
     decided_by: str | None
     decided_at: str | None
     created_at: str
 
 
-class StubResponse(BaseModel):
-    """What a generated route returns until someone implements it.
+_VALID_DECISIONS = {"approve", "reject"}
 
-    A stub that returns a typed body rather than raising keeps the service
-    startable and its OpenAPI document complete, so the frontend can be built
-    against the agreed shape while the handlers are still being written.
-    """
 
-    endpoint: str
-    status: str = "not_implemented"
-    detail: str = "Scaffolded from the approved API spec; no behaviour yet."
+class LeaveRequestDecision(BaseModel):
+    decision: str
+    comment: str = Field(min_length=1)
+
+    @field_validator("comment")
+    @classmethod
+    def _non_blank_comment(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("comment must not be empty or whitespace")
+        return v
+
+    @field_validator("decision")
+    @classmethod
+    def _known_decision(cls, v: str) -> str:
+        lowered = v.lower()
+        if lowered not in _VALID_DECISIONS:
+            raise ValueError("unknown decision")
+        return lowered
+
+
+class BalanceResponse(BaseModel):
+    year: int
+    allocated_days: int
+    adjustment_days: int
+    approved_annual_days: int
+    remaining_days: int
+
+
+class AdminBalanceAdjustment(BaseModel):
+    year: int
+    new_remaining_days: int
+    note: str = Field(min_length=1)
+
+    @field_validator("note")
+    @classmethod
+    def _non_blank_note(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("note must not be empty or whitespace")
+        return v

@@ -16,9 +16,6 @@ _DEV_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 # so the rules that spend and reset a balance all read one number.
 ANNUAL_LEAVE_ALLOCATION_DAYS = 20
 
-# How long a session created by the identity picker stays usable.
-SESSION_TTL_HOURS = 12
-
 # Minutes of inactivity before a session expires; reset on every authenticated
 # request so an active caller never sees its session expire mid-use.
 SESSION_IDLE_MINUTES = 60
@@ -50,7 +47,6 @@ class Settings:
         self.smoke_test_password: str = os.getenv("SMOKE_TEST_PASSWORD", "")
 
         self.annual_leave_allocation_days: int = ANNUAL_LEAVE_ALLOCATION_DAYS
-        self.session_ttl_hours: int = SESSION_TTL_HOURS
         self.session_idle_minutes: int = int(
             os.getenv("SESSION_IDLE_MINUTES", str(SESSION_IDLE_MINUTES))
         )

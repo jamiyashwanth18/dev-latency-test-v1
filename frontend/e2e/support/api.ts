@@ -139,3 +139,43 @@ export async function trySignIn(userId: string): Promise<number> {
 export async function getPending(token: string): Promise<{ status: number; body: unknown }> {
   return request("/leave-requests/pending", { headers: { Authorization: `Bearer ${token}` } });
 }
+
+// POST /leave-requests/{id}/decision as a manager or HR/Admin bearer token: approves or
+// rejects a direct report's pending request with a comment, per the contract.
+export async function decideLeaveRequest(
+  managerToken: string,
+  requestId: string,
+  payload: { decision: "approve" | "reject"; comment: string },
+): Promise<{ status: number; body: unknown }> {
+  return request(`/leave-requests/${requestId}/decision`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${managerToken}` },
+    body: JSON.stringify(payload),
+  });
+}
+
+// GET /leave-requests/mine as a given bearer token: used to read back a request's
+// status, comment and other fields after a decision, without relying on the UI.
+export async function getMine(token: string): Promise<{ status: number; body: unknown }> {
+  return request("/leave-requests/mine", { headers: { Authorization: `Bearer ${token}` } });
+}
+
+// GET /balances/mine as a given bearer token: the acting employee's current-year
+// annual balance, per the contract.
+export async function getBalanceMine(token: string): Promise<{ status: number; body: unknown }> {
+  return request("/balances/mine", { headers: { Authorization: `Bearer ${token}` } });
+}
+
+// PUT /admin/users/{id}/balance as an HR/Admin bearer token: sets a new remaining
+// balance for the given year with a note, per the contract.
+export async function putAdminBalance(
+  adminToken: string,
+  userId: string,
+  payload: { year: number; new_remaining_days: number; note: string },
+): Promise<{ status: number; body: unknown }> {
+  return request(`/admin/users/${userId}/balance`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify(payload),
+  });
+}
