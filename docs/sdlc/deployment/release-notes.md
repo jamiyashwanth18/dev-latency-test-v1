@@ -3,6 +3,19 @@
 > Maintained by QuorQ AI SDLC. Text between `sdlc:auto` markers is regenerated; anything outside them is yours and is kept.
 
 <!-- sdlc:auto:start releases -->
+## 9ebe10f9dc8c — 2026-11-19
+
+**Commit:** `9ebe10f`
+
+**Delivered:**
+- US-006: Be warned about overlapping requests
+- US-007: View my leave requests and their status
+- US-008: See my remaining annual leave balance
+- US-009: Review pending requests from my direct reports
+- US-020: Restrict access to sick-leave reasons
+- US-021: Access getting-started guidance
+- US-FIX-1: Fix the scaffold's failing checks
+
 ## bc954cbf5e2c — 2026-11-19
 
 **Commit:** `bc954cb`
