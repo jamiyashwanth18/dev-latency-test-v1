@@ -1,21 +1,40 @@
-// @ts-nocheck -- generated from the approved design under its JS runtime contract; not hand-written TypeScript.
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 
 import { Icons } from "@/lib/icons";
 import { brand } from "@/lib/brand";
 import { useNavigate } from "@/lib/navigate";
 
-const { Home, ArrowLeft, ArrowRight } = Icons;
+type RoleKey = "everyone" | "employee" | "manager" | "hr";
 
-const TABS = [
+interface Tab {
+  key: RoleKey;
+  label: string;
+  wf: string;
+}
+
+interface RoleDetail {
+  applies: boolean;
+  steps: string[];
+}
+
+interface GuideItem {
+  wf: string;
+  n: string;
+  title: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement> & { size?: number }>;
+  where: string;
+  lead: string;
+  roles: Record<RoleKey, RoleDetail>;
+}
+
+const TABS: Tab[] = [
   { key: "everyone", label: "Everyone", wf: "i-2-0-0" },
   { key: "employee", label: "Employee", wf: "i-2-0-1" },
   { key: "manager", label: "Manager", wf: "i-2-0-2" },
   { key: "hr", label: "HR/Admin", wf: "i-2-0-3" },
 ];
 
-const GUIDE = [
+const GUIDE: GuideItem[] = [
   {
     wf: "b-3-0",
     n: "01",
@@ -178,8 +197,8 @@ const GUIDE = [
 
 export default function Screen() {
   const navigate = useNavigate();
-  const [active, setActive] = React.useState("everyone");
-  const tabRefs = React.useRef([]);
+  const [active, setActive] = React.useState<RoleKey>("everyone");
+  const tabRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
 
   const ink = brand.primaryColor;
   const paper = brand.backgroundColor;
@@ -194,9 +213,9 @@ export default function Screen() {
 
   const activeIndex = TABS.findIndex((t) => t.key === active);
 
-  const onTabKeyDown = (e) => {
+  const onTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const last = TABS.length - 1;
-    let next = null;
+    let next: number | null = null;
     if (e.key === "ArrowRight") next = activeIndex === last ? 0 : activeIndex + 1;
     if (e.key === "ArrowLeft") next = activeIndex === 0 ? last : activeIndex - 1;
     if (e.key === "Home") next = 0;
