@@ -37,6 +37,17 @@ function roleLabel(role) {
   return found ? found.label : role;
 }
 
+function nameAndRoleErrors(full_name, role) {
+  const errs = {};
+  if (!full_name.trim()) errs.full_name = "Full name is required.";
+  if (!role) errs.role = "Role is required.";
+  return errs;
+}
+
+function errorMessage(err, fallback) {
+  return err instanceof ApiError ? err.message : fallback;
+}
+
 export default function Screen() {
   const [meState, setMeState] = React.useState("loading"); // loading | forbidden | ready | error
   const [me, setMe] = React.useState(null);
@@ -124,15 +135,8 @@ export default function Screen() {
     setNewUserServerError("");
   }
 
-  function validateNewUser() {
-    const errs = {};
-    if (!newUser.full_name.trim()) errs.full_name = "Full name is required.";
-    if (!newUser.role) errs.role = "Role is required.";
-    return errs;
-  }
-
   async function submitNewUser() {
-    const errs = validateNewUser();
+    const errs = nameAndRoleErrors(newUser.full_name, newUser.role);
     setNewUserErrors(errs);
     setNewUserServerError("");
     if (Object.keys(errs).length) return;
@@ -173,9 +177,7 @@ export default function Screen() {
   }
 
   async function saveEdit(u) {
-    const errs = {};
-    if (!editDraft.full_name.trim()) errs.full_name = "Full name is required.";
-    if (!editDraft.role) errs.role = "Role is required.";
+    const errs = nameAndRoleErrors(editDraft.full_name, editDraft.role);
     setEditErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -195,7 +197,7 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not save that change.",
+        [u.id]: errorMessage(err, "Could not save that change."),
       }));
     } finally {
       setSavingId(null);
@@ -214,7 +216,7 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not update the manager.",
+        [u.id]: errorMessage(err, "Could not update the manager."),
       }));
     } finally {
       setSavingId(null);
@@ -238,13 +240,9 @@ export default function Screen() {
   function validateBalance(draft) {
     const errs = {};
     const rawDays = draft.new_remaining_days;
-    if (rawDays === "" || rawDays === null || rawDays === undefined) {
+    const num = Number(rawDays);
+    if (rawDays === "" || !Number.isInteger(num)) {
       errs.new_remaining_days = "Enter a whole number of days.";
-    } else {
-      const num = Number(rawDays);
-      if (!Number.isFinite(num) || !Number.isInteger(num) || String(rawDays).trim() === "") {
-        errs.new_remaining_days = "Enter a whole number of days.";
-      }
     }
     if (!draft.note.trim()) errs.note = "A note is required.";
     return errs;
@@ -276,9 +274,7 @@ export default function Screen() {
         window.location.href = "/sign-in";
         return;
       }
-      setBalanceServerError(
-        err instanceof ApiError ? err.message : "Could not save that balance change.",
-      );
+      setBalanceServerError(errorMessage(err, "Could not save that balance change."));
     } finally {
       setBalanceSavingId(null);
     }
@@ -309,7 +305,7 @@ export default function Screen() {
     } catch (err) {
       setRowServerError((prev) => ({
         ...prev,
-        [u.id]: err instanceof ApiError ? err.message : "Could not deactivate that user.",
+        [u.id]: errorMessage(err, "Could not deactivate that user."),
       }));
     } finally {
       setSavingId(null);
