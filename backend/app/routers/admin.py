@@ -12,8 +12,15 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user, to_iso_z, utcnow
-from app.models import Role, User, UserSession
-from app.schemas import AdminUserCreate, AdminUserPublic, AdminUserUpdate
+from app.models import AuditLogEntry, Role, User, UserSession
+from app.routers.balances import _approved_annual_days, _get_or_create_balance
+from app.schemas import (
+    AdminBalanceAdjustment,
+    AdminUserCreate,
+    AdminUserPublic,
+    AdminUserUpdate,
+    BalanceResponse,
+)
 
 router = APIRouter(prefix="/admin")
 
@@ -127,3 +134,47 @@ def update_user(
     db.commit()
     db.refresh(user)
     return _serialize(user)
+
+
+@router.put("/users/{id}/balance", response_model=BalanceResponse)
+def adjust_balance(
+    id: str,
+    payload: AdminBalanceAdjustment,
+    db: Session = Depends(get_db),  # noqa: B008
+    actor: User = Depends(_require_hr_admin),  # noqa: B008
+) -> BalanceResponse:
+    user_id = _parse_uuid_or_404(id, detail="User not found")
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    balance = _get_or_create_balance(db, user, payload.year)
+    approved_annual_days = _approved_annual_days(db, user, payload.year)
+    balance.adjustment_days = (
+        payload.new_remaining_days - balance.allocated_days + approved_annual_days
+    )
+    balance.adjustment_note = payload.note
+
+    db.add(
+        AuditLogEntry(
+            actor_user_id=actor.id,
+            action_type="balance_adjusted",
+            detail={
+                "user_id": str(user.id),
+                "year": payload.year,
+                "new_remaining_days": payload.new_remaining_days,
+                "note": payload.note,
+            },
+        )
+    )
+    db.commit()
+    db.refresh(balance)
+
+    remaining_days = balance.allocated_days + balance.adjustment_days - approved_annual_days
+    return BalanceResponse(
+        year=payload.year,
+        allocated_days=balance.allocated_days,
+        adjustment_days=balance.adjustment_days,
+        approved_annual_days=approved_annual_days,
+        remaining_days=remaining_days,
+    )

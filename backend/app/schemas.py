@@ -192,3 +192,16 @@ class BalanceResponse(BaseModel):
     adjustment_days: int
     approved_annual_days: int
     remaining_days: int
+
+
+class AdminBalanceAdjustment(BaseModel):
+    year: int
+    new_remaining_days: int
+    note: str = Field(min_length=1)
+
+    @field_validator("note")
+    @classmethod
+    def _non_blank_note(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("note must not be empty or whitespace")
+        return v
