@@ -60,26 +60,15 @@ function redirectToSignIn() {
   window.location.href = "/sign-in";
 }
 
-// Best-effort mapping of a server 422's message onto the field it concerns.
-// The validation detail FastAPI sends is a list of {loc, msg, type}; when it
-// cannot be read as a single string, the generic text below is matched on
-// known phrasing from the contract's listed 422 cases.
+// Client-side validation already rejects a missing field, an unknown leave
+// type, a whitespace-only reason and an end date before the start date, so
+// the only server 422 a validly-filled form can still hit is a weekend-only
+// range. Map that one onto its field; anything else falls back to the
+// generic banner.
 function mapServerError(message: string): { field: keyof FormState; text: string } | null {
   const m = message.toLowerCase();
   if (m.includes("no monday-to-friday day") || m.includes("weekend")) {
     return { field: "end_date", text: "That range has no working day in it — Mon–Fri only." };
-  }
-  if (m.includes("end_date") && m.includes("before")) {
-    return { field: "end_date", text: "End date falls before the start date." };
-  }
-  if (m.includes("reason")) {
-    return { field: "reason", text: "Reason must not be empty or whitespace only." };
-  }
-  if (m.includes("leave_type")) {
-    return { field: "leave_type", text: "Choose annual or sick." };
-  }
-  if (m.includes("start_date")) {
-    return { field: "start_date", text: "Pick a start date." };
   }
   return null;
 }
