@@ -4,9 +4,16 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# --only-binary :all: refuses any sdist that would run a setup.py / build backend
+# at install time; every pin in requirements.txt ships a wheel for this image's
+# platform, so this never needs to fall back to building from source.
+RUN pip install --no-cache-dir --only-binary :all: -r requirements.txt
 
 COPY app ./app
+# The schema is applied by Alembic on startup, so the migrations and their config
+# have to be in the image, not just in the repository.
+COPY alembic.ini ./alembic.ini
+COPY migrations ./migrations
 
 # Run as an unprivileged user. The service never needs root, and a container that
 # drops it limits what a compromise of the app can do to the host.

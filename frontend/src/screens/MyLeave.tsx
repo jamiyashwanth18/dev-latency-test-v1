@@ -1,5 +1,5 @@
 // @ts-nocheck -- generated from the approved design under its JS runtime contract; not hand-written TypeScript.
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React from "react";
 
 import * as UI from "@/lib/ui";
@@ -7,9 +7,25 @@ import { Icons } from "@/lib/icons";
 import { brand } from "@/lib/brand";
 import { useNavigate } from "@/lib/navigate";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { Button, Card, CardContent, Input, Textarea, Label, Select, Badge, Table, THead, TBody, TR, TH, TD, Separator, Empty } = UI;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const {
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Textarea,
+  Label,
+  Select,
+  Badge,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  Separator,
+  Empty,
+} = UI;
+
 const { Plus, Check, X, Bell, Clock, ArrowRight, AlertCircle, CheckCircle } = Icons;
 
 const ME = {
@@ -169,7 +185,15 @@ function fmtRange(startIso, endIso) {
   }
   if (a.getFullYear() === b.getFullYear()) {
     return (
-      a.getDate() + " " + MONTHS[a.getMonth()] + " – " + b.getDate() + " " + MONTHS[b.getMonth()] + " " + b.getFullYear()
+      a.getDate() +
+      " " +
+      MONTHS[a.getMonth()] +
+      " – " +
+      b.getDate() +
+      " " +
+      MONTHS[b.getMonth()] +
+      " " +
+      b.getFullYear()
     );
   }
   return fmtDay(startIso) + " – " + fmtDay(endIso);
@@ -218,12 +242,16 @@ export default function Screen() {
 
   const approvedAnnualDays = requests.reduce(function (sum, r) {
     const inYear = parseDay(r.start_date).getFullYear() === YEAR;
-    return r.status === "Approved" && r.leave_type === "annual" && inYear ? sum + r.working_days : sum;
+    return r.status === "Approved" && r.leave_type === "annual" && inYear
+      ? sum + r.working_days
+      : sum;
   }, 0);
 
   const approvedSickDays = requests.reduce(function (sum, r) {
     const inYear = parseDay(r.start_date).getFullYear() === YEAR;
-    return r.status === "Approved" && r.leave_type === "sick" && inYear ? sum + r.working_days : sum;
+    return r.status === "Approved" && r.leave_type === "sick" && inYear
+      ? sum + r.working_days
+      : sum;
   }, 0);
 
   const remaining = Math.max(0, ALLOCATED_DAYS + ADJUSTMENT_DAYS - approvedAnnualDays);
@@ -232,7 +260,7 @@ export default function Screen() {
     function () {
       return countWorkingDays(form.start_date, form.end_date);
     },
-    [form.start_date, form.end_date]
+    [form.start_date, form.end_date],
   );
 
   const overlapWith = React.useMemo(
@@ -247,7 +275,7 @@ export default function Screen() {
       });
       return hit.length ? hit[0] : null;
     },
-    [form.start_date, form.end_date, requests]
+    [form.start_date, form.end_date, requests],
   );
 
   const unread = notifications.filter(function (n) {
@@ -283,7 +311,8 @@ export default function Screen() {
     if (!form.start_date) next.start_date = "Pick a start date.";
     if (!form.end_date) next.end_date = "Pick an end date.";
     if (form.start_date && parseDay(form.start_date) < parseDay(TODAY)) {
-      next.start_date = fmtDay(form.start_date) + " has already passed. Backdated leave goes through HR.";
+      next.start_date =
+        fmtDay(form.start_date) + " has already passed. Backdated leave goes through HR.";
     }
     if (form.start_date && form.end_date && parseDay(form.end_date) < parseDay(form.start_date)) {
       next.end_date = "End date falls before the start date.";
@@ -291,7 +320,8 @@ export default function Screen() {
     if (!form.leave_type) next.leave_type = "Choose annual or sick.";
     if (!form.reason.trim()) next.reason = "Add a reason — Priya Nair reads this before deciding.";
     if (!Object.keys(next).length && draftDays === 0) {
-      next.end_date = "That range is weekend only. Leave is counted in whole working days, Mon–Fri.";
+      next.end_date =
+        "That range is weekend only. Leave is counted in whole working days, Mon–Fri.";
     }
 
     if (Object.keys(next).length) {
@@ -302,7 +332,8 @@ export default function Screen() {
         body:
           Object.keys(next).length === 1
             ? "One field needs completing. Nothing you typed has been lost."
-            : Object.keys(next).length + " fields need completing. Nothing you typed has been lost.",
+            : Object.keys(next).length +
+              " fields need completing. Nothing you typed has been lost.",
       });
       return;
     }
@@ -352,14 +383,28 @@ export default function Screen() {
     "@keyframes bsBannerIn{from{opacity:0;transform:translate(-4px,-4px)}to{opacity:1;transform:none}}" +
     ".bs-row-in{animation:bsRowIn .4s ease-out both}" +
     ".bs-banner-in{animation:bsBannerIn .3s ease-out both}" +
-    ".bs-focus:focus-visible{outline:3px solid " + blue + ";outline-offset:3px}" +
+    ".bs-focus:focus-visible{outline:3px solid " +
+    blue +
+    ";outline-offset:3px}" +
     ".bs-press{transition:transform .08s ease-out,box-shadow .08s ease-out}" +
-    ".bs-press:hover{transform:translate(-1px,-1px);box-shadow:7px 7px 0 " + ink + "}" +
-    ".bs-press:active{transform:translate(3px,3px);box-shadow:2px 2px 0 " + ink + "}" +
+    ".bs-press:hover{transform:translate(-1px,-1px);box-shadow:7px 7px 0 " +
+    ink +
+    "}" +
+    ".bs-press:active{transform:translate(3px,3px);box-shadow:2px 2px 0 " +
+    ink +
+    "}" +
     ".bs-link{transition:background-color .12s ease-out}" +
-    ".bs-link:hover{background-color:" + blue + ";color:" + cream + "}" +
+    ".bs-link:hover{background-color:" +
+    blue +
+    ";color:" +
+    cream +
+    "}" +
     ".bs-ghost{transition:background-color .12s ease-out,color .12s ease-out}" +
-    ".bs-ghost:hover{background-color:" + ink + ";color:" + cream + "}" +
+    ".bs-ghost:hover{background-color:" +
+    ink +
+    ";color:" +
+    cream +
+    "}" +
     "@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}";
 
   const inputStyle = {
@@ -427,14 +472,26 @@ export default function Screen() {
     }
     if (s === "Rejected") {
       return (
-        <span style={Object.assign({}, base, { backgroundColor: cream, color: ink, textDecoration: "line-through" })}>
+        <span
+          style={Object.assign({}, base, {
+            backgroundColor: cream,
+            color: ink,
+            textDecoration: "line-through",
+          })}
+        >
           <X aria-hidden="true" className="h-3.5 w-3.5" />
           REJECTED
         </span>
       );
     }
     return (
-      <span style={Object.assign({}, base, { backgroundColor: cream, color: ink, borderStyle: "dashed" })}>
+      <span
+        style={Object.assign({}, base, {
+          backgroundColor: cream,
+          color: ink,
+          borderStyle: "dashed",
+        })}
+      >
         <Clock aria-hidden="true" className="h-3.5 w-3.5" />
         PENDING
       </span>
@@ -458,23 +515,32 @@ export default function Screen() {
             : "none",
           display: "block",
         }}
-      />
+      />,
     );
   }
 
   return (
-    <div style={{ backgroundColor: cream, color: ink, fontFamily: brand.fontBody }} className="w-full">
+    <div
+      style={{ backgroundColor: cream, color: ink, fontFamily: brand.fontBody }}
+      className="w-full"
+    >
       <style>{css}</style>
 
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-10">
         {/* ── b-0-0 ─────────────────────────────────────────── */}
         <header data-wf="b-0-0" className="mb-12">
-          <p className="uppercase tracking-[0.3em]" style={Object.assign({ fontSize: 11, color: neutral }, mono)}>
+          <p
+            className="uppercase tracking-[0.3em]"
+            style={Object.assign({ fontSize: 11, color: neutral }, mono)}
+          >
             Leave ledger · {YEAR}
           </p>
           <h1
             className="mt-3 leading-[0.95]"
-            style={Object.assign({ fontSize: 52, fontWeight: 400, letterSpacing: "-0.02em" }, serif)}
+            style={Object.assign(
+              { fontSize: 52, fontWeight: 400, letterSpacing: "-0.02em" },
+              serif,
+            )}
           >
             My Leave
           </h1>
@@ -486,7 +552,10 @@ export default function Screen() {
             style={Object.assign({ fontSize: 11, color: neutral }, mono)}
           >
             <span className="inline-flex items-center gap-2">
-              <span aria-hidden="true" style={{ width: 8, height: 8, backgroundColor: blue, display: "block" }} />
+              <span
+                aria-hidden="true"
+                style={{ width: 8, height: 8, backgroundColor: blue, display: "block" }}
+              />
               SESSION ACTIVE · ENDS {ME.session_expires}
             </span>
             <span aria-hidden="true">/</span>
@@ -499,41 +568,70 @@ export default function Screen() {
         <div className="grid grid-cols-12 gap-6 mb-12">
           <Card data-wf="b-1-0" className="col-span-12 md:col-span-6" style={hardBox}>
             <CardContent className="p-7">
-              <h2 className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, fontWeight: 700 }, mono)}>
+              <h2
+                className="uppercase tracking-[0.2em]"
+                style={Object.assign({ fontSize: 11, fontWeight: 700 }, mono)}
+              >
                 01 / Annual leave remaining
               </h2>
               <p className="mt-5 flex items-baseline gap-3">
-                <span style={Object.assign({ fontSize: 68, lineHeight: 1, color: blue }, serif, { fontVariantNumeric: "tabular-nums" })}>
+                <span
+                  style={Object.assign({ fontSize: 68, lineHeight: 1, color: blue }, serif, {
+                    fontVariantNumeric: "tabular-nums",
+                  })}
+                >
                   {remaining}
                 </span>
                 <span style={Object.assign({ fontSize: 16 }, mono)}>of {ALLOCATED_DAYS} days</span>
               </p>
-              <div className="mt-6 flex flex-wrap gap-[3px]" role="img" aria-label={remaining + " of " + ALLOCATED_DAYS + " annual leave days remaining in " + YEAR}>
+              <div
+                className="mt-6 flex flex-wrap gap-[3px]"
+                role="img"
+                aria-label={
+                  remaining + " of " + ALLOCATED_DAYS + " annual leave days remaining in " + YEAR
+                }
+              >
                 {ledger}
               </div>
-              <p className="mt-5" style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}>
-                {approvedAnnualDays} day{approvedAnnualDays === 1 ? "" : "s"} approved so far in {YEAR}. The
-                allowance resets each 1 January — nothing carries over.
+              <p
+                className="mt-5"
+                style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}
+              >
+                {approvedAnnualDays} day{approvedAnnualDays === 1 ? "" : "s"} approved so far in{" "}
+                {YEAR}. The allowance resets each 1 January — nothing carries over.
               </p>
             </CardContent>
           </Card>
 
           <Card data-wf="b-1-1" className="col-span-12 md:col-span-6" style={hardBox}>
             <CardContent className="p-7">
-              <h2 className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, fontWeight: 700 }, mono)}>
+              <h2
+                className="uppercase tracking-[0.2em]"
+                style={Object.assign({ fontSize: 11, fontWeight: 700 }, mono)}
+              >
                 02 / Sick leave taken
               </h2>
               <p className="mt-5 flex items-baseline gap-3">
-                <span style={Object.assign({ fontSize: 68, lineHeight: 1 }, serif, { fontVariantNumeric: "tabular-nums" })}>
+                <span
+                  style={Object.assign({ fontSize: 68, lineHeight: 1 }, serif, {
+                    fontVariantNumeric: "tabular-nums",
+                  })}
+                >
                   {approvedSickDays}
                 </span>
                 <span style={Object.assign({ fontSize: 16 }, mono)}>days</span>
               </p>
               <div style={{ borderTop: "1px dashed " + ink, opacity: 0.4 }} className="mt-7" />
-              <p className="mt-5" style={Object.assign({ fontSize: 12, color: ink, lineHeight: 1.6 }, mono)}>
+              <p
+                className="mt-5"
+                style={Object.assign({ fontSize: 12, color: ink, lineHeight: 1.6 }, mono)}
+              >
                 Tracked separately and uncapped — it does not reduce the 20 annual days.
               </p>
-              <p className="mt-3" style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}>
+              <p
+                className="mt-3"
+                style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}
+              >
                 Your sick-leave reasons are readable only by you, Priya Nair and HR.
               </p>
             </CardContent>
@@ -559,7 +657,10 @@ export default function Screen() {
                     style={{ borderTop: idx === 0 ? "none" : "1px solid " + ink }}
                   >
                     <Bell aria-hidden="true" className="h-5 w-5 shrink-0" style={{ color: blue }} />
-                    <p className="flex-1 m-0" style={Object.assign({ fontSize: 14, lineHeight: 1.6 }, mono)}>
+                    <p
+                      className="flex-1 m-0"
+                      style={Object.assign({ fontSize: 14, lineHeight: 1.6 }, mono)}
+                    >
                       <span className="sr-only">Notification: </span>
                       {n.text}
                     </p>
@@ -570,8 +671,16 @@ export default function Screen() {
                       }}
                       className="bs-focus bs-ghost shrink-0 uppercase tracking-[0.14em] px-3 py-2"
                       style={Object.assign(
-                        { border: "2px solid " + ink, borderRadius: 0, fontSize: 11, fontWeight: 700, minHeight: 44, backgroundColor: cream, color: ink },
-                        mono
+                        {
+                          border: "2px solid " + ink,
+                          borderRadius: 0,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          minHeight: 44,
+                          backgroundColor: cream,
+                          color: ink,
+                        },
+                        mono,
                       )}
                     >
                       Mark read
@@ -583,10 +692,14 @@ export default function Screen() {
           ) : (
             <p
               className="flex items-center gap-3 p-5"
-              style={Object.assign({ border: "1px dashed " + ink, fontSize: 13, color: neutral }, mono)}
+              style={Object.assign(
+                { border: "1px dashed " + ink, fontSize: 13, color: neutral },
+                mono,
+              )}
             >
               <Bell aria-hidden="true" className="h-4 w-4" />
-              Nothing new since 18 Feb 2026. Decisions from Priya Nair land here — the app never emails you.
+              Nothing new since 18 Feb 2026. Decisions from Priya Nair land here — the app never
+              emails you.
             </p>
           )}
         </section>
@@ -600,10 +713,16 @@ export default function Screen() {
             className="p-7 sm:p-9"
           >
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <h2 id="request-heading" style={Object.assign({ fontSize: 34, lineHeight: 1 }, serif)}>
+              <h2
+                id="request-heading"
+                style={Object.assign({ fontSize: 34, lineHeight: 1 }, serif)}
+              >
                 Request leave
               </h2>
-              <p className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, color: neutral }, mono)}>
+              <p
+                className="uppercase tracking-[0.2em]"
+                style={Object.assign({ fontSize: 11, color: neutral }, mono)}
+              >
                 04 / Goes to Priya Nair
               </p>
             </div>
@@ -633,7 +752,10 @@ export default function Screen() {
                   >
                     {banner.title}
                   </strong>
-                  <span className="block mt-2" style={Object.assign({ fontSize: 13, lineHeight: 1.6 }, mono)}>
+                  <span
+                    className="block mt-2"
+                    style={Object.assign({ fontSize: 13, lineHeight: 1.6 }, mono)}
+                  >
                     {banner.body}
                   </span>
                 </span>
@@ -697,7 +819,11 @@ export default function Screen() {
                   <option value="annual">Annual</option>
                   <option value="sick">Sick</option>
                 </Select>
-                <p id="leave_type-hint" className="mt-2" style={Object.assign({ fontSize: 12, color: neutral }, mono)}>
+                <p
+                  id="leave_type-hint"
+                  className="mt-2"
+                  style={Object.assign({ fontSize: 12, color: neutral }, mono)}
+                >
                   Sick leave never touches the 20-day balance.
                 </p>
                 <FieldError id="leave_type-error" message={errors.leave_type} />
@@ -711,7 +837,11 @@ export default function Screen() {
                   name="reason"
                   rows={3}
                   className="bs-focus"
-                  style={Object.assign({}, inputStyle, { minHeight: 104, lineHeight: 1.6, resize: "vertical" })}
+                  style={Object.assign({}, inputStyle, {
+                    minHeight: 104,
+                    lineHeight: 1.6,
+                    resize: "vertical",
+                  })}
                   placeholder="A line is enough — Priya Nair reads this before deciding."
                   value={form.reason}
                   aria-invalid={errors.reason ? "true" : undefined}
@@ -720,8 +850,13 @@ export default function Screen() {
                     setField("reason", e.target.value);
                   }}
                 />
-                <p id="reason-hint" className="mt-2" style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}>
-                  For sick leave, only you, Priya Nair and HR can read this. It is never shown on the team calendar.
+                <p
+                  id="reason-hint"
+                  className="mt-2"
+                  style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.6 }, mono)}
+                >
+                  For sick leave, only you, Priya Nair and HR can read this. It is never shown on
+                  the team calendar.
                 </p>
                 <FieldError id="reason-error" message={errors.reason} />
               </div>
@@ -736,11 +871,16 @@ export default function Screen() {
               style={{ border: "1px solid " + ink, borderLeft: "3px solid " + blue }}
               aria-live="polite"
             >
-              <p className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, color: neutral }, mono)}>
+              <p
+                className="uppercase tracking-[0.2em]"
+                style={Object.assign({ fontSize: 11, color: neutral }, mono)}
+              >
                 Length
               </p>
               <p className="mt-2" style={Object.assign({ fontSize: 15, lineHeight: 1.6 }, mono)}>
-                {form.start_date && form.end_date && parseDay(form.end_date) >= parseDay(form.start_date) ? (
+                {form.start_date &&
+                form.end_date &&
+                parseDay(form.end_date) >= parseDay(form.start_date) ? (
                   <React.Fragment>
                     <strong style={{ fontSize: 22 }}>{draftDays}</strong> working day
                     {draftDays === 1 ? "" : "s"}{" "}
@@ -755,11 +895,14 @@ export default function Screen() {
                 )}
               </p>
               {form.leave_type === "annual" && draftDays > remaining && draftDays > 0 ? (
-                <p className="mt-3 flex items-start gap-2" style={Object.assign({ fontSize: 12, lineHeight: 1.6 }, mono)}>
+                <p
+                  className="mt-3 flex items-start gap-2"
+                  style={Object.assign({ fontSize: 12, lineHeight: 1.6 }, mono)}
+                >
                   <AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0 mt-[2px]" />
                   <span>
-                    That is {draftDays - remaining} day{draftDays - remaining === 1 ? "" : "s"} more than your{" "}
-                    {remaining} remaining — Priya Nair cannot approve beyond the balance.
+                    That is {draftDays - remaining} day{draftDays - remaining === 1 ? "" : "s"} more
+                    than your {remaining} remaining — Priya Nair cannot approve beyond the balance.
                   </span>
                 </p>
               ) : null}
@@ -774,22 +917,38 @@ export default function Screen() {
               }}
               aria-live="polite"
             >
-              <p className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, color: neutral }, mono)}>
+              <p
+                className="uppercase tracking-[0.2em]"
+                style={Object.assign({ fontSize: 11, color: neutral }, mono)}
+              >
                 Overlap check
               </p>
               {overlapWith ? (
-                <p className="mt-2 flex items-start gap-2" style={Object.assign({ fontSize: 13, lineHeight: 1.6 }, mono)}>
-                  <AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0 mt-[3px]" style={{ color: blue }} />
+                <p
+                  className="mt-2 flex items-start gap-2"
+                  style={Object.assign({ fontSize: 13, lineHeight: 1.6 }, mono)}
+                >
+                  <AlertCircle
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 mt-[3px]"
+                    style={{ color: blue }}
+                  />
                   <span>
                     <strong>Overlap flagged:</strong> these dates overlap your{" "}
-                    {overlapWith.status.toLowerCase()} request {fmtRange(overlapWith.start_date, overlapWith.end_date)}{" "}
-                    ({overlapWith.id}). You can still file it — Priya Nair sees the flag too.
+                    {overlapWith.status.toLowerCase()} request{" "}
+                    {fmtRange(overlapWith.start_date, overlapWith.end_date)} ({overlapWith.id}). You
+                    can still file it — Priya Nair sees the flag too.
                   </span>
                 </p>
               ) : (
-                <p className="mt-2 flex items-start gap-2" style={Object.assign({ fontSize: 13, lineHeight: 1.6, color: neutral }, mono)}>
+                <p
+                  className="mt-2 flex items-start gap-2"
+                  style={Object.assign({ fontSize: 13, lineHeight: 1.6, color: neutral }, mono)}
+                >
                   <Check aria-hidden="true" className="h-4 w-4 shrink-0 mt-[3px]" />
-                  <span>Clear — these dates do not overlap any pending or approved request of yours.</span>
+                  <span>
+                    Clear — these dates do not overlap any pending or approved request of yours.
+                  </span>
                 </p>
               )}
             </div>
@@ -815,7 +974,7 @@ export default function Screen() {
                     fontWeight: 700,
                     cursor: submitting ? "progress" : "pointer",
                   },
-                  mono
+                  mono,
                 )}
               >
                 {submitting ? (
@@ -840,8 +999,16 @@ export default function Screen() {
                 }}
                 className="bs-focus bs-link inline-flex items-center gap-2 px-2 py-3"
                 style={Object.assign(
-                  { fontSize: 14, color: ink, textDecoration: "underline", textUnderlineOffset: 5, minHeight: 44, background: "none", border: "none" },
-                  mono
+                  {
+                    fontSize: 14,
+                    color: ink,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 5,
+                    minHeight: 44,
+                    background: "none",
+                    border: "none",
+                  },
+                  mono,
                 )}
               >
                 Check who else is off on these dates
@@ -857,7 +1024,10 @@ export default function Screen() {
             <h2 id="requests-heading" style={Object.assign({ fontSize: 34, lineHeight: 1 }, serif)}>
               My requests
             </h2>
-            <p className="uppercase tracking-[0.2em]" style={Object.assign({ fontSize: 11, color: neutral }, mono)}>
+            <p
+              className="uppercase tracking-[0.2em]"
+              style={Object.assign({ fontSize: 11, color: neutral }, mono)}
+            >
               05 / {requests.length} filed ·{" "}
               {
                 requests.filter(function (r) {
@@ -883,8 +1053,16 @@ export default function Screen() {
                     }}
                     className="bs-focus uppercase tracking-[0.16em]"
                     style={Object.assign(
-                      { backgroundColor: blue, color: cream, border: "3px solid " + ink, borderRadius: 0, minHeight: 48, fontSize: 12, fontWeight: 700 },
-                      mono
+                      {
+                        backgroundColor: blue,
+                        color: cream,
+                        border: "3px solid " + ink,
+                        borderRadius: 0,
+                        minHeight: 48,
+                        fontSize: 12,
+                        fontWeight: 700,
+                      },
+                      mono,
                     )}
                   >
                     Start a request
@@ -894,28 +1072,66 @@ export default function Screen() {
             </div>
           ) : (
             <div className="mt-6 overflow-x-auto" style={{ border: "3px solid " + ink }}>
-              <Table className="w-full" style={Object.assign({ borderCollapse: "collapse", minWidth: 940 }, mono)}>
+              <Table
+                className="w-full"
+                style={Object.assign({ borderCollapse: "collapse", minWidth: 940 }, mono)}
+              >
                 <THead>
                   <TR style={{ backgroundColor: ink, color: cream }}>
-                    <TH data-wf="i-6-0-0" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-0"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Dates
                     </TH>
-                    <TH data-wf="i-6-0-1" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-1"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Type
                     </TH>
-                    <TH data-wf="i-6-0-2" scope="col" className="text-right uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-2"
+                      scope="col"
+                      className="text-right uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Working days
                     </TH>
-                    <TH data-wf="i-6-0-3" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-3"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Status
                     </TH>
-                    <TH data-wf="i-6-0-4" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-4"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Overlap
                     </TH>
-                    <TH data-wf="i-6-0-5" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-5"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Manager comment
                     </TH>
-                    <TH data-wf="i-6-0-6" scope="col" className="text-left uppercase tracking-[0.16em] px-4 py-3" style={{ fontSize: 11, color: cream }}>
+                    <TH
+                      data-wf="i-6-0-6"
+                      scope="col"
+                      className="text-left uppercase tracking-[0.16em] px-4 py-3"
+                      style={{ fontSize: 11, color: cream }}
+                    >
                       Submitted
                     </TH>
                   </TR>
@@ -947,7 +1163,7 @@ export default function Screen() {
                                 letterSpacing: "0.1em",
                                 padding: "2px 8px",
                               },
-                              mono
+                              mono,
                             )}
                           >
                             {r.leave_type === "annual" ? "ANNUAL" : "SICK"}
@@ -962,14 +1178,21 @@ export default function Screen() {
                         <TD className="px-4 py-4 align-top" style={{ fontSize: 12 }}>
                           {r.has_overlap ? (
                             <span className="inline-flex items-center gap-2" style={{ color: ink }}>
-                              <AlertCircle aria-hidden="true" className="h-4 w-4" style={{ color: blue }} />
+                              <AlertCircle
+                                aria-hidden="true"
+                                className="h-4 w-4"
+                                style={{ color: blue }}
+                              />
                               Flagged
                             </span>
                           ) : (
                             <span style={{ color: neutral }}>Clear</span>
                           )}
                         </TD>
-                        <TD className="px-4 py-4 align-top" style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 300 }}>
+                        <TD
+                          className="px-4 py-4 align-top"
+                          style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 300 }}
+                        >
                           {r.manager_comment ? (
                             <span>
                               {r.manager_comment}
@@ -981,7 +1204,10 @@ export default function Screen() {
                             <span style={{ color: neutral }}>Awaiting Priya Nair</span>
                           )}
                         </TD>
-                        <TD className="px-4 py-4 align-top" style={{ fontSize: 12, color: neutral, whiteSpace: "nowrap" }}>
+                        <TD
+                          className="px-4 py-4 align-top"
+                          style={{ fontSize: 12, color: neutral, whiteSpace: "nowrap" }}
+                        >
                           {fmtDay(r.created_at)}
                         </TD>
                       </TR>
@@ -995,9 +1221,13 @@ export default function Screen() {
           <div className="mt-6">
             <Separator className="opacity-30" />
           </div>
-          <p className="mt-5 max-w-[68ch]" style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.7 }, mono)}>
-            Only approved leave reaches the shared team calendar, and sick-leave reasons never appear there. Approved
-            annual days are the only thing that reduces your {ALLOCATED_DAYS}-day balance.
+          <p
+            className="mt-5 max-w-[68ch]"
+            style={Object.assign({ fontSize: 12, color: neutral, lineHeight: 1.7 }, mono)}
+          >
+            Only approved leave reaches the shared team calendar, and sick-leave reasons never
+            appear there. Approved annual days are the only thing that reduces your {ALLOCATED_DAYS}
+            -day balance.
           </p>
         </section>
       </div>

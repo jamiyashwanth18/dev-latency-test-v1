@@ -53,7 +53,7 @@ function AppShellLayout() {
             </NavLink>
             <NavLink to="/sign-in" className={navLinkClass}>
               <Icons.User size={16} />
-              {"Sign out (Sam Okafor)"}
+              {"Sign out"}
             </NavLink>
           </nav>
         </div>
