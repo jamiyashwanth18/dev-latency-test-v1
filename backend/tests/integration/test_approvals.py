@@ -163,9 +163,7 @@ def test_ac038_sick_reason_hidden_from_unrelated_colleague_and_manager(
     manager = _create_user(client, admin_headers, role=Role.MANAGER.value)
     unrelated_manager = _create_user(client, admin_headers, role=Role.MANAGER.value)
     employee = _create_user(client, admin_headers, manager_id=manager["id"])
-    unrelated_colleague = _create_user(
-        client, admin_headers, manager_id=unrelated_manager["id"]
-    )
+    unrelated_colleague = _create_user(client, admin_headers, manager_id=unrelated_manager["id"])
     employee_headers = _headers(client, employee)
 
     sick_reason = f"AC-038 confidential reason {uuid.uuid4()}"

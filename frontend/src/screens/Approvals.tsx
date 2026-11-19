@@ -117,7 +117,9 @@ export default function Screen() {
       if (err instanceof ApiError && (err.status === 403 || err.status === 409)) {
         setDecisionError(err.message || "Could not record that decision.");
       } else {
-        setDecisionError(err instanceof Error ? err.message : "Could not record that decision. Try again.");
+        setDecisionError(
+          err instanceof Error ? err.message : "Could not record that decision. Try again.",
+        );
       }
     } finally {
       setBusyId(null);
