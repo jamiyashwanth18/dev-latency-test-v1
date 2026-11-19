@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start overview -->
 A web app for a small team to manage leave. Employees can submit a leave request with start date, end date, type (annual, sick) and a reason. They see their requests and remaining annual balance (20 days per year). Managers see pending requests from their team and approve or reject them with a comment. Approved leave reduces the balance. A simple team calendar shows who is on leave each day. No external login: pick a user from a list.
 
-**Documentation version:** v8
+**Documentation version:** v9
 <!-- sdlc:auto:end overview -->
 
 ## Contents
@@ -17,7 +17,7 @@ A web app for a small team to manage leave. Employees can submit a leave request
 | [Architecture](architecture/README.md) | 19 entries |
 | [Planning](planning/README.md) | 16 entries |
 | [Development](development/README.md) | 5 entries |
-| [Testing](testing/README.md) | 1 entry |
+| [Testing](testing/README.md) | 4 entries |
 | [Deployment](deployment/README.md) | 1 entry |
 | [Maintenance](maintenance/README.md) | 0 entries |
 | [Data model](architecture/data-model.md) | generated |
@@ -32,5 +32,5 @@ A web app for a small team to manage leave. Employees can submit a leave request
 | [Runbook](deployment/runbook.md) | deployed |
 | [Release notes](deployment/release-notes.md) | 2 releases |
 | [Traceability matrix](traceability-matrix.md) | 21 requirements |
-| [Changelog](CHANGELOG.md) | 8 versions |
+| [Changelog](CHANGELOG.md) | 9 versions |
 <!-- sdlc:auto:end contents -->
