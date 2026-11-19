@@ -1,7 +1,9 @@
-"""Leave-request submission and listing: POST /leave-requests,
-GET /leave-requests/mine, GET /leave-requests/pending.
+"""Leave-request submission, listing and decision: POST /leave-requests,
+GET /leave-requests/mine, GET /leave-requests/pending,
+POST /leave-requests/{id}/decision.
 """
 
+import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,10 +11,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user, to_iso_z
+from app.dependencies import get_current_user, to_iso_z, utcnow
 from app.leave_calc import working_days_between
-from app.models import AuditLogEntry, LeaveRequest, LeaveStatus, Role, User
-from app.schemas import LeaveRequestCreate, LeaveRequestPublic
+from app.models import AuditLogEntry, LeaveRequest, LeaveStatus, LeaveType, Role, User
+from app.routers.balances import _approved_annual_days, _get_or_create_balance
+from app.schemas import LeaveRequestCreate, LeaveRequestDecision, LeaveRequestPublic
 
 router = APIRouter()
 
@@ -28,7 +31,15 @@ def _can_see_reason(leave_request: LeaveRequest, viewer: User) -> bool:
     return employee is not None and employee.manager_id == viewer.id
 
 
-def _serialize(leave_request: LeaveRequest, *, viewer: User) -> LeaveRequestPublic:
+def _remaining_balance(db: Session, employee: User) -> int:
+    """Same rule as GET /balances/mine, for whichever employee owns the request."""
+    year = utcnow().year
+    balance = _get_or_create_balance(db, employee, year)
+    approved_annual_days = _approved_annual_days(db, employee, year)
+    return balance.allocated_days + balance.adjustment_days - approved_annual_days
+
+
+def _serialize(leave_request: LeaveRequest, *, viewer: User, db: Session) -> LeaveRequestPublic:
     reason = leave_request.reason
     if leave_request.leave_type == "sick" and not _can_see_reason(leave_request, viewer):
         reason = None
@@ -43,11 +54,19 @@ def _serialize(leave_request: LeaveRequest, *, viewer: User) -> LeaveRequestPubl
         working_days=leave_request.working_days,
         status=leave_request.status,
         has_overlap=leave_request.has_overlap,
+        remaining_balance=_remaining_balance(db, leave_request.employee),
         manager_comment=leave_request.manager_comment,
         decided_by=str(leave_request.decided_by) if leave_request.decided_by else None,
         decided_at=to_iso_z(leave_request.decided_at) if leave_request.decided_at else None,
         created_at=to_iso_z(leave_request.created_at),
     )
+
+
+def _parse_uuid_or_404(value: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Leave request not found") from exc
 
 
 @router.post(
@@ -107,7 +126,7 @@ def create_leave_request(
     )
     db.commit()
     db.refresh(leave_request)
-    return _serialize(leave_request, viewer=user)
+    return _serialize(leave_request, viewer=user, db=db)
 
 
 @router.get("/leave-requests/mine", response_model=list[LeaveRequestPublic])
@@ -120,7 +139,7 @@ def list_mine(
         .where(LeaveRequest.employee_id == user.id)
         .order_by(LeaveRequest.created_at.desc(), LeaveRequest.id.desc())
     ).all()
-    return [_serialize(r, viewer=user) for r in rows]
+    return [_serialize(r, viewer=user, db=db) for r in rows]
 
 
 @router.get("/leave-requests/pending", response_model=list[LeaveRequestPublic])
@@ -139,4 +158,62 @@ def list_pending(
     query = query.order_by(LeaveRequest.created_at.asc(), LeaveRequest.id.asc())
 
     rows = db.scalars(query).all()
-    return [_serialize(r, viewer=user) for r in rows]
+    return [_serialize(r, viewer=user, db=db) for r in rows]
+
+
+@router.post("/leave-requests/{id}/decision", response_model=LeaveRequestPublic)
+def decide_leave_request(
+    id: str,
+    payload: LeaveRequestDecision,
+    db: Session = Depends(get_db),  # noqa: B008
+    user: User = Depends(get_current_user),  # noqa: B008
+) -> LeaveRequestPublic:
+    request_id = _parse_uuid_or_404(id)
+    leave_request = db.get(LeaveRequest, request_id)
+    if leave_request is None:
+        raise HTTPException(status_code=404, detail="Leave request not found")
+
+    employee = leave_request.employee
+    if employee is None or employee.manager_id != user.id:
+        raise HTTPException(
+            status_code=403, detail="Only the employee's current manager may decide"
+        )
+
+    if leave_request.status != LeaveStatus.PENDING.value:
+        raise HTTPException(status_code=409, detail="Leave request is not pending")
+
+    if payload.decision == "approve" and leave_request.leave_type == LeaveType.ANNUAL.value:
+        remaining = _remaining_balance(db, employee)
+        if leave_request.working_days > remaining:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Approving this request would exceed the remaining "
+                    f"balance of {remaining} days"
+                ),
+            )
+
+    new_status = (
+        LeaveStatus.APPROVED.value if payload.decision == "approve" else LeaveStatus.REJECTED.value
+    )
+    now = utcnow()
+    leave_request.status = new_status
+    leave_request.manager_comment = payload.comment
+    leave_request.decided_by = user.id
+    leave_request.decided_at = now
+
+    db.add(
+        AuditLogEntry(
+            actor_user_id=user.id,
+            action_type="leave_request_decided",
+            leave_request_id=leave_request.id,
+            detail={
+                "decision": payload.decision,
+                "comment": payload.comment,
+                "status": new_status,
+            },
+        )
+    )
+    db.commit()
+    db.refresh(leave_request)
+    return _serialize(leave_request, viewer=user, db=db)

@@ -156,10 +156,34 @@ class LeaveRequestPublic(BaseModel):
     working_days: int
     status: str
     has_overlap: bool
+    remaining_balance: int
     manager_comment: str | None
     decided_by: str | None
     decided_at: str | None
     created_at: str
+
+
+_VALID_DECISIONS = {"approve", "reject"}
+
+
+class LeaveRequestDecision(BaseModel):
+    decision: str
+    comment: str = Field(min_length=1)
+
+    @field_validator("comment")
+    @classmethod
+    def _non_blank_comment(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("comment must not be empty or whitespace")
+        return v
+
+    @field_validator("decision")
+    @classmethod
+    def _known_decision(cls, v: str) -> str:
+        lowered = v.lower()
+        if lowered not in _VALID_DECISIONS:
+            raise ValueError("unknown decision")
+        return lowered
 
 
 class BalanceResponse(BaseModel):
