@@ -4,7 +4,11 @@ One pair per entity in the approved data model, plus the placeholder every
 generated route returns until it has been implemented.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.models import Role
+
+_VALID_ROLES = {r.value for r in Role}
 
 
 class UserPublic(BaseModel):
@@ -34,6 +38,71 @@ class SessionResponse(BaseModel):
     token: str
     user: UserPublic
     expires_at: str
+
+
+class AdminUserPublic(BaseModel):
+    """A user as shown to HR/Admin: full reporting-line and lifecycle detail."""
+
+    id: str
+    full_name: str
+    role: str
+    manager_id: str | None
+    is_active: bool
+    created_at: str
+
+
+class AdminUserCreate(BaseModel):
+    full_name: str = Field(min_length=1)
+    role: str
+    manager_id: str | None = None
+
+    @field_validator("full_name")
+    @classmethod
+    def _non_blank_full_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("full_name must not be empty or whitespace")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def _known_role(cls, v: str) -> str:
+        lowered = v.lower()
+        if lowered not in _VALID_ROLES:
+            raise ValueError("unknown role")
+        return lowered
+
+
+class AdminUserUpdate(BaseModel):
+    full_name: str | None = None
+    role: str | None = None
+    manager_id: str | None = None
+    is_active: bool | None = None
+
+    @field_validator("full_name")
+    @classmethod
+    def _non_blank_full_name(cls, v: str | None) -> str:
+        if v is None:
+            raise ValueError("full_name must not be null")
+        if not v.strip():
+            raise ValueError("full_name must not be empty or whitespace")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def _known_role(cls, v: str | None) -> str:
+        if v is None:
+            raise ValueError("role must not be null")
+        lowered = v.lower()
+        if lowered not in _VALID_ROLES:
+            raise ValueError("unknown role")
+        return lowered
+
+    @field_validator("is_active")
+    @classmethod
+    def _non_null_is_active(cls, v: bool | None) -> bool:
+        if v is None:
+            raise ValueError("is_active must not be null")
+        return v
 
 
 class StubResponse(BaseModel):

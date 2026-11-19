@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import models  # noqa: F401 -- imported so every table registers on Base.metadata
 from app.config import get_settings
 from app.database import SessionLocal, run_migrations
+from app.routers.admin import router as admin_router
 from app.routers.sessions import router as sessions_router
 from app.seed import seed_platform_users
 
@@ -76,3 +77,4 @@ async def health() -> dict[str, str]:
 
 
 app.include_router(sessions_router)
+app.include_router(admin_router)
