@@ -7,7 +7,11 @@ Pushes to `main` run `.github/workflows/deploy.yml`, which builds the API image 
 <!-- sdlc:auto:end how-it-deploys -->
 
 <!-- sdlc:auto:start environments -->
-_No environments recorded._
+| Name | Service | Runtime | Scaling | Environment |
+|---|---|---|---|---|
+| Web SPA (S3 + CloudFront) | Static React build served from its own origin | React 19 static assets | CDN edge cache, single small distribution | dev |
+| API Service (ECS Fargate) | FastAPI container behind an Application Load Balancer on its own origin | FastAPI 0.115 on Python 3.12 (Uvicorn) | 1-2 small tasks, sized for tens of users | dev |
+| PostgreSQL (RDS) | Managed PostgreSQL in a single EU region, encrypted at rest | PostgreSQL 16 | Single small instance, automated backups | dev |
 <!-- sdlc:auto:end environments -->
 
 <!-- sdlc:auto:start live -->
@@ -15,5 +19,12 @@ _Not deployed yet._
 <!-- sdlc:auto:end live -->
 
 <!-- sdlc:auto:start topology -->
-_No deployment topology recorded._
+```mermaid
+graph LR
+  n_Web_SPA__S3___CloudFront_["Web SPA (S3 + CloudFront)<br/>Static React build served from its own origin"]
+  n_API_Service__ECS_Fargate_["API Service (ECS Fargate)<br/>FastAPI container behind an Application Load Balancer on its own origin"]
+  n_PostgreSQL__RDS_["PostgreSQL (RDS)<br/>Managed PostgreSQL in a single EU region, encrypted at rest"]
+  n_Web_SPA__S3___CloudFront_ -->|"HTTPS"| n_API_Service__ECS_Fargate_
+  n_API_Service__ECS_Fargate_ -->|"TLS (PostgreSQL wire protocol)"| n_PostgreSQL__RDS_
+```
 <!-- sdlc:auto:end topology -->

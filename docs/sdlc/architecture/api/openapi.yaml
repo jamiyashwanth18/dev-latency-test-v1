@@ -2,6 +2,473 @@
 openapi: 3.1.0
 info:
   title: Dev latency test - v1
-  version: architecture-v0
+  version: architecture-v1
   description: Designed API from the approved architecture (not extracted from code).
-paths: {}
+paths:
+  /admin/audit-log:
+    get:
+      summary: 'HR/Admin: view append-only audit entries; denied to Employee and Manager.'
+      description: 'HR/Admin: view append-only audit entries; denied to Employee and
+        Manager.'
+      operationId: get_admin_audit_log
+      parameters: []
+      responses:
+        '200':
+          description: '[{actor, action_type, detail, created_at}]'
+      security:
+      - bearerAuth: []
+  /admin/users:
+    get:
+      summary: 'HR/Admin: list all users with role, reporting line and active state.'
+      description: 'HR/Admin: list all users with role, reporting line and active
+        state.'
+      operationId: get_admin_users
+      parameters: []
+      responses:
+        '200':
+          description: '[{id, full_name, role, manager_id, is_active}]'
+      security:
+      - bearerAuth: []
+    post:
+      summary: 'HR/Admin: add a user with name and role.'
+      description: 'HR/Admin: add a user with name and role.'
+      operationId: post_admin_users
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{full_name, role}'
+      responses:
+        '200':
+          description: '{id, full_name, role, is_active}'
+      security:
+      - bearerAuth: []
+  /admin/users/{id}:
+    patch:
+      summary: 'HR/Admin: edit a user, set reporting line, or deactivate (deactivation
+        revokes that user''s sessions).'
+      description: 'HR/Admin: edit a user, set reporting line, or deactivate (deactivation
+        revokes that user''s sessions).'
+      operationId: patch_admin_users_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{full_name?, role?, manager_id?, is_active?}'
+      responses:
+        '200':
+          description: '{id, full_name, role, manager_id, is_active}'
+      security:
+      - bearerAuth: []
+  /admin/users/{id}/balance:
+    put:
+      summary: 'HR/Admin: set a new remaining annual balance with a note; writes an
+        audit entry.'
+      description: 'HR/Admin: set a new remaining annual balance with a note; writes
+        an audit entry.'
+      operationId: put_admin_users_id_balance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{year, new_remaining_days, note}'
+      responses:
+        '200':
+          description: '{user_id, year, remaining_days}'
+      security:
+      - bearerAuth: []
+  /balances/mine:
+    get:
+      summary: Return the acting employee's remaining annual balance for the current
+        year.
+      description: Return the acting employee's remaining annual balance for the current
+        year.
+      operationId: get_balances_mine
+      parameters: []
+      responses:
+        '200':
+          description: '{year, allocated_days, adjustment_days, approved_annual_days,
+            remaining_days}'
+      security:
+      - bearerAuth: []
+  /calendar:
+    get:
+      summary: Team calendar of approved leave by day; shows who is on leave without
+        sick-leave reasons.
+      description: Team calendar of approved leave by day; shows who is on leave without
+        sick-leave reasons.
+      operationId: get_calendar
+      parameters: []
+      responses:
+        '200':
+          description: '[{date, entries: [{user_full_name, leave_type}]}]'
+      security:
+      - bearerAuth: []
+  /docs/getting-started:
+    get:
+      summary: Role-appropriate getting-started guidance content.
+      description: Role-appropriate getting-started guidance content.
+      operationId: get_docs_getting_started
+      parameters: []
+      responses:
+        '200':
+          description: '{sections: [{role, title, body}]}'
+      security:
+      - bearerAuth: []
+  /leave-requests:
+    post:
+      summary: Submit a leave request; validates fields and date order, computes working
+        days, flags overlap, stores Pending, audits an
+      description: Submit a leave request; validates fields and date order, computes
+        working days, flags overlap, stores Pending, audits and notifies manager.
+      operationId: post_leave_requests
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{start_date, end_date, leave_type, reason}'
+      responses:
+        '200':
+          description: '{id, working_days, status, has_overlap}'
+      security:
+      - bearerAuth: []
+  /leave-requests/mine:
+    get:
+      summary: List the acting employee's own requests with status, length and manager
+        comment.
+      description: List the acting employee's own requests with status, length and
+        manager comment.
+      operationId: get_leave_requests_mine
+      parameters: []
+      responses:
+        '200':
+          description: '[{id, start_date, end_date, leave_type, working_days, status,
+            manager_comment, has_overlap}]'
+      security:
+      - bearerAuth: []
+  /leave-requests/pending:
+    get:
+      summary: Manager view of pending requests from their direct reports only, with
+        employee, length, reason, remaining balance and ov
+      description: Manager view of pending requests from their direct reports only,
+        with employee, length, reason, remaining balance and overlap flag.
+      operationId: get_leave_requests_pending
+      parameters: []
+      responses:
+        '200':
+          description: '[{id, employee, dates, leave_type, working_days, reason, remaining_balance,
+            has_overlap}]'
+      security:
+      - bearerAuth: []
+  /leave-requests/{id}/decision:
+    post:
+      summary: 'Approve or reject a direct report''s request with a comment; blocks
+        annual approval beyond remaining balance, deducts on '
+      description: Approve or reject a direct report's request with a comment; blocks
+        annual approval beyond remaining balance, deducts on approval, audits and
+        notifies.
+      operationId: post_leave_requests_id_decision
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{decision: approve|reject, comment}'
+      responses:
+        '200':
+          description: '{id, status, remaining_balance}'
+      security:
+      - bearerAuth: []
+  /me:
+    get:
+      summary: Return the acting identity, role and permissions; validates and refreshes
+        session activity.
+      description: Return the acting identity, role and permissions; validates and
+        refreshes session activity.
+      operationId: get_me
+      parameters: []
+      responses:
+        '200':
+          description: '{id, full_name, role}'
+      security:
+      - bearerAuth: []
+  /notifications:
+    get:
+      summary: In-app indicators for the acting user (pending items for managers,
+        decision updates for employees).
+      description: In-app indicators for the acting user (pending items for managers,
+        decision updates for employees).
+      operationId: get_notifications
+      parameters: []
+      responses:
+        '200':
+          description: '[{id, type, leave_request_id, is_read, created_at}]'
+      security:
+      - bearerAuth: []
+  /notifications/{id}/read:
+    post:
+      summary: Mark an in-app notification as read.
+      description: Mark an in-app notification as read.
+      operationId: post_notifications_id_read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: none
+      responses:
+        '200':
+          description: '204'
+      security:
+      - bearerAuth: []
+  /sessions:
+    post:
+      summary: Create a session by selecting an identity; returns an opaque bearer
+        token in the body.
+      description: Create a session by selecting an identity; returns an opaque bearer
+        token in the body.
+      operationId: post_sessions
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: '{user_id}'
+      responses:
+        '200':
+          description: '{token, user: {id, full_name, role}, expires_at}'
+  /sessions/current:
+    delete:
+      summary: 'Sign out: revoke the current session.'
+      description: 'Sign out: revoke the current session.'
+      operationId: delete_sessions_current
+      parameters: []
+      responses:
+        '200':
+          description: '204'
+      security:
+      - bearerAuth: []
+  /users/active:
+    get:
+      summary: List active users for the identity picker (deactivated users excluded).
+      description: List active users for the identity picker (deactivated users excluded).
+      operationId: get_users_active
+      parameters: []
+      responses:
+        '200':
+          description: '[{id, full_name, role}]'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    users:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        role:
+          type: string
+        manager_id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - full_name
+      - role
+      - is_active
+      - created_at
+    sessions:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_active_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - user_id
+      - token
+      - created_at
+      - last_active_at
+      - expires_at
+    leave_requests:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employee_id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        leave_type:
+          type: string
+        reason:
+          type: string
+        working_days:
+          type: integer
+        status:
+          type: string
+        has_overlap:
+          type: boolean
+        manager_comment:
+          type: string
+        decided_by:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - employee_id
+      - start_date
+      - end_date
+      - leave_type
+      - reason
+      - working_days
+      - status
+      - has_overlap
+      - created_at
+    leave_balances:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        year:
+          type: integer
+        allocated_days:
+          type: integer
+        adjustment_days:
+          type: integer
+        adjustment_note:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - user_id
+      - year
+      - allocated_days
+      - adjustment_days
+      - updated_at
+    notifications:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        leave_request_id:
+          type: string
+          format: uuid
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - user_id
+      - type
+      - is_read
+      - created_at
+    audit_log:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        actor_user_id:
+          type: string
+          format: uuid
+        action_type:
+          type: string
+        leave_request_id:
+          type: string
+          format: uuid
+        detail:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - actor_user_id
+      - action_type
+      - detail
+      - created_at
