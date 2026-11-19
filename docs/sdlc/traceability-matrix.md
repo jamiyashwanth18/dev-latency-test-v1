@@ -9,9 +9,9 @@ Built from recorded links, not written by a model: requirement key → plan item
 <!-- sdlc:auto:start matrix -->
 | Requirement | Epic | Title | Plan items | Sprint | Design | Code | Commits | Ticket | Tests | AC tests | Deployed |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| US-001 | EPIC-001 | Select my identity from the user list | US-001, US-001-T1, US-001-T2, US-001-T3 | 1 | GET /me, GET /users/active, POST /sessions, api_backend, database, sessions, users, web_spa | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
-| US-002 | EPIC-001 | Act within my role's permissions | US-002 | 1 | GET /me, api_backend, users, web_spa | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
-| US-003 | EPIC-001 | End my session | US-003 | 1 | DELETE /sessions/current, api_backend, sessions, web_spa | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
+| US-001 | EPIC-001 | Select my identity from the user list | US-001, US-001-T1, US-001-T2, US-001-T3 | 1 | GET /me, GET /users/active, POST /sessions, api_backend, database, sessions, users, web_spa | — | — | deferred | not run | 0/2 tested · 0/2 passing | — |
+| US-002 | EPIC-001 | Act within my role's permissions | US-002 | 1 | GET /me, api_backend, users, web_spa | — | — | skipped | not run | 0/3 tested · 0/3 passing | — |
+| US-003 | EPIC-001 | End my session | US-003 | 1 | DELETE /sessions/current, api_backend, sessions, web_spa | — | — | skipped | not run | 0/3 tested · 0/3 passing | — |
 | US-004 | EPIC-002 | Submit a leave request | US-004, US-004-T1, US-004-T2, US-004-T3 | 2 | POST /leave-requests, api_backend, database, leave_requests, web_spa | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-005 | EPIC-002 | See the whole-working-day length of my request | US-005 | 2 | POST /leave-requests, api_backend, leave_requests | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-006 | EPIC-002 | Be warned about overlapping requests | US-006 | 3 | POST /leave-requests, api_backend, leave_requests | — | — | not started | not run | 0/1 tested · 0/1 passing | — |

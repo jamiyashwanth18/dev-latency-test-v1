@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start endpoints -->
 | Method | Path | Handler | Source | Summary |
 |---|---|---|---|---|
-| GET | /health | health | `backend/app/main.py:57` | Liveness probe, and the only route here that is not a stub. |
+| GET | /health | health | `backend/app/main.py:71` | Liveness probe, and the only route here that is not a stub. |
 <!-- sdlc:auto:end endpoints -->
 
 <!-- sdlc:auto:start drift -->
@@ -32,5 +32,5 @@
 <!-- sdlc:auto:end drift -->
 
 <!-- sdlc:auto:start source -->
-Generated from commit `1e430eb`
+Generated from commit `6d52753`
 <!-- sdlc:auto:end source -->

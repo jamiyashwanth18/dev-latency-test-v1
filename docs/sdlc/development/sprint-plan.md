@@ -90,6 +90,19 @@ Capacity: 20 points · Committed: 3
 |---|---|---|---|---|---|
 | US-018 | Story | View the audit log | 3 | frontend-agent | US-017, US-002 |
 
+## Sprint 7: Fixes
+
+Fix the findings SonarQube reported.
+
+Capacity: 0 points · Committed: 0
+
+| Key | Type | Title | Points | Role | Depends on |
+|---|---|---|---|---|---|
+| FIX-SEC-docker-s8544-82cfea7f | Story | Fix: Using dependencies without locking resolved versions is security-sensitive. (backend/Dockerfile) | — | — | — |
+| FIX-SEC-githubactions-s8543-ca13026c | Story | Fix: Using dependencies without locking resolved versions is security-sensitive. (.github/workflows/deploy.yml) | — | devops-agent | — |
+| FIX-DAST-zap-10038-a3ec3827 | Story | Fix: Content Security Policy (CSP) Header Not Set | — | backend-agent | — |
+| FIX-DAST-zap-10020-c96362a3 | Story | Fix: Missing Anti-clickjacking Header | — | backend-agent | — |
+
 ## Unscheduled
 
 _Nothing unscheduled._
