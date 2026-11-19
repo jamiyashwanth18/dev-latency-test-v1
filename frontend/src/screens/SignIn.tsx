@@ -1,73 +1,62 @@
-// @ts-nocheck -- generated from the approved design under its JS runtime contract; not hand-written TypeScript.
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 
 import * as UI from "@/lib/ui";
 import { Icons } from "@/lib/icons";
 import { brand } from "@/lib/brand";
 import { useNavigate } from "@/lib/navigate";
+import {
+  apiFetch,
+  ApiError,
+  setSessionToken,
+  type ActiveUser,
+  type SessionResponse,
+  type SessionUser,
+} from "@/lib/api";
 
 const { Button, Empty } = UI;
 
-const { Search, Check, X, ChevronRight, User, Clock } = Icons;
+const { Search, X, ChevronRight, User, Clock } = Icons;
 
 const PRODUCT = "Dev latency test - v1";
 const SCREEN = "Choose Your Identity";
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-// GET /users/active — only is_active users are selectable (AC-002)
-const ACTIVE_USERS = [
-  {
-    wf: "i-3-0-0",
-    id: "u-1041",
-    full_name: "Sam Okafor",
-    role: "Employee",
-    line: "Reports to Priya Nair",
-  },
-  {
-    wf: "i-3-0-1",
-    id: "u-1052",
-    full_name: "Maya Lindqvist",
-    role: "Employee",
-    line: "Reports to Priya Nair",
-  },
-  {
-    wf: "i-3-0-2",
-    id: "u-1067",
-    full_name: "Tom Becker",
-    role: "Employee",
-    line: "Reports to Priya Nair",
-  },
-  {
-    wf: "i-3-0-3",
-    id: "u-1018",
-    full_name: "Priya Nair",
-    role: "Manager",
-    line: "3 direct reports",
-  },
-  {
-    wf: "i-3-0-4",
-    id: "u-1002",
-    full_name: "Dana Weiss",
-    role: "HR/Admin",
-    line: "Manages users and balances",
-  },
-];
+function roleLabel(role: ActiveUser["role"]): string {
+  if (role === "hr_admin") return "HR/Admin";
+  if (role === "manager") return "Manager";
+  return "Employee";
+}
 
-const LAST_SESSION_ENDED = "09:41";
+type ListState = "loading" | "error" | "ready";
 
-export default function Screen() {
+export default function Screen({ onSignedIn }: { onSignedIn?: (user: SessionUser) => void }) {
   const navigate = useNavigate();
   const [query, setQuery] = React.useState("");
-  const [pendingId, setPendingId] = React.useState(null);
+  const [listState, setListState] = React.useState<ListState>("loading");
+  const [users, setUsers] = React.useState<ActiveUser[]>([]);
+  const [listError, setListError] = React.useState("");
+  const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [signInError, setSignInError] = React.useState("");
   const [noticeOpen, setNoticeOpen] = React.useState(true);
-  const searchRef = React.useRef(null);
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
+  const loadUsers = React.useCallback(() => {
+    setListState("loading");
+    setListError("");
+    apiFetch<ActiveUser[]>("/users/active")
+      .then((data) => {
+        setUsers(data);
+        setListState("ready");
+      })
+      .catch((err: unknown) => {
+        setListError(err instanceof Error ? err.message : "Could not load active users.");
+        setListState("error");
+      });
+  }, []);
 
   React.useEffect(() => {
-    if (!pendingId) return undefined;
-    const t = setTimeout(() => navigate("my-leave"), 650);
-    return () => clearTimeout(t);
-  }, [pendingId]);
+    loadUsers();
+  }, [loadUsers]);
 
   const thick = `3px solid ${brand.primaryColor}`;
   const hard = `8px 8px 0 ${brand.primaryColor}`;
@@ -82,11 +71,34 @@ export default function Screen() {
 
   const q = query.trim().toLowerCase();
   const results = q
-    ? ACTIVE_USERS.filter(
-        (u) => u.full_name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q),
+    ? users.filter(
+        (u) => u.full_name.toLowerCase().includes(q) || roleLabel(u.role).toLowerCase().includes(q),
       )
-    : ACTIVE_USERS;
-  const pendingUser = ACTIVE_USERS.find((u) => u.id === pendingId) || null;
+    : users;
+
+  async function pickUser(u: ActiveUser) {
+    if (pendingId) return;
+    setSignInError("");
+    setPendingId(u.id);
+    try {
+      const session = await apiFetch<SessionResponse>("/sessions", {
+        method: "POST",
+        body: JSON.stringify({ user_id: u.id }),
+      });
+      setSessionToken(session.token);
+      onSignedIn?.(session.user);
+      navigate("my-leave");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setSignInError("That user can no longer sign in.");
+      } else {
+        setSignInError(
+          err instanceof Error ? err.message : "Could not start a session. Try again.",
+        );
+      }
+      setPendingId(null);
+    }
+  }
 
   return (
     <div
@@ -147,8 +159,8 @@ export default function Screen() {
                   className="flex-1 text-xs uppercase leading-relaxed tracking-[0.08em]"
                   style={{ fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}
                 >
-                  Last session ended {LAST_SESSION_ENDED} — 30 minutes with no activity. Nothing was
-                  lost; pick your name to carry on.
+                  Sessions end after a period of inactivity. Nothing is lost; pick your name to
+                  carry on.
                 </p>
                 <button
                   type="button"
@@ -207,23 +219,33 @@ export default function Screen() {
               >
                 02 / Active users
               </h2>
-              <span
-                className="text-xs uppercase"
-                style={{
-                  fontFamily: MONO,
-                  color: brand.neutralColor,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {results.length} of {ACTIVE_USERS.length}
-              </span>
+              {listState === "ready" ? (
+                <span
+                  className="text-xs uppercase"
+                  style={{
+                    fontFamily: MONO,
+                    color: brand.neutralColor,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {results.length} of {users.length}
+                </span>
+              ) : null}
             </div>
 
-            {results.length === 0 ? (
+            {listState === "loading" ? (
+              <p
+                role="status"
+                className="mt-4 text-sm"
+                style={{ fontFamily: MONO, color: brand.neutralColor }}
+              >
+                Loading active users…
+              </p>
+            ) : listState === "error" ? (
               <div className="mt-4">
                 <Empty
-                  title="No active user by that name"
-                  description={`Nobody active matches “${query.trim()}”. Check the spelling, or ask HR/Admin whether that account was deactivated.`}
+                  title="Could not load active users"
+                  description={listError || "Something went wrong talking to the server."}
                   action={
                     <Button
                       type="button"
@@ -235,13 +257,42 @@ export default function Screen() {
                         borderRadius: brand.radius,
                         fontFamily: MONO,
                       }}
-                      onClick={() => {
-                        setQuery("");
-                        if (searchRef.current) searchRef.current.focus();
-                      }}
+                      onClick={loadUsers}
                     >
-                      Clear search
+                      Try again
                     </Button>
+                  }
+                />
+              </div>
+            ) : results.length === 0 ? (
+              <div className="mt-4">
+                <Empty
+                  title={users.length === 0 ? "No active users yet" : "No active user by that name"}
+                  description={
+                    users.length === 0
+                      ? "Nobody is set up to sign in yet. Ask HR/Admin to add a user."
+                      : `Nobody active matches “${query.trim()}”. Check the spelling, or ask HR/Admin whether that account was deactivated.`
+                  }
+                  action={
+                    users.length > 0 ? (
+                      <Button
+                        type="button"
+                        className="wf-focus h-11 px-5 text-xs font-bold uppercase tracking-[0.2em]"
+                        style={{
+                          backgroundColor: brand.primaryColor,
+                          color: brand.backgroundColor,
+                          border: thick,
+                          borderRadius: brand.radius,
+                          fontFamily: MONO,
+                        }}
+                        onClick={() => {
+                          setQuery("");
+                          searchRef.current?.focus();
+                        }}
+                      >
+                        Clear search
+                      </Button>
+                    ) : undefined
                   }
                 />
               </div>
@@ -254,10 +305,9 @@ export default function Screen() {
                     <li key={u.id} className="wf-row" style={i === 0 ? undefined : hair}>
                       <button
                         type="button"
-                        data-wf={u.wf}
                         disabled={busy}
                         aria-busy={isPending}
-                        onClick={() => setPendingId(u.id)}
+                        onClick={() => pickUser(u)}
                         className="wf-pick wf-focus flex w-full items-center gap-4 px-3 py-4 text-left disabled:opacity-100"
                         style={{
                           borderRadius: brand.radius,
@@ -279,7 +329,7 @@ export default function Screen() {
                             className="mt-1 block text-[11px] uppercase tracking-[0.14em]"
                             style={{ fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}
                           >
-                            {u.role} · {u.line} · {u.id}
+                            {roleLabel(u.role)} · {u.id}
                           </span>
                         </span>
                         <span
@@ -303,11 +353,16 @@ export default function Screen() {
               role="status"
               aria-live="polite"
               className="mt-4 text-xs uppercase tracking-[0.14em]"
-              style={{ fontFamily: MONO, color: brand.accentColor, minHeight: 16 }}
+              style={{
+                fontFamily: MONO,
+                color: signInError ? "#b42318" : brand.accentColor,
+                minHeight: 16,
+              }}
             >
-              {pendingUser
-                ? `Starting session as ${pendingUser.full_name} (${pendingUser.role})…`
-                : ""}
+              {signInError ||
+                (pendingId
+                  ? `Starting session as ${users.find((u) => u.id === pendingId)?.full_name ?? ""}…`
+                  : "")}
             </p>
           </div>
 
@@ -339,9 +394,7 @@ export default function Screen() {
         style={{ borderTop: thick, fontFamily: MONO }}
       >
         <span>© {PRODUCT}</span>
-        <span style={{ fontVariantNumeric: "tabular-nums" }}>
-          Internal team app · Sessions expire after 30 minutes idle
-        </span>
+        <span style={{ fontVariantNumeric: "tabular-nums" }}>Internal team app</span>
       </footer>
     </div>
   );

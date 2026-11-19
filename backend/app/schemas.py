@@ -4,7 +4,36 @@ One pair per entity in the approved data model, plus the placeholder every
 generated route returns until it has been implemented.
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class UserPublic(BaseModel):
+    """The minimal shape of a user shown to anyone: the identity picker, /me's
+    embedded user, and a session's embedded user."""
+
+    id: str
+    full_name: str
+    role: str
+
+
+class MeResponse(BaseModel):
+    id: str
+    full_name: str
+    role: str
+    manager_id: str | None
+    is_active: bool
+
+
+class SessionCreateRequest(BaseModel):
+    """Sign-in needs nothing but the identity being selected."""
+
+    user_id: str = Field(min_length=1)
+
+
+class SessionResponse(BaseModel):
+    token: str
+    user: UserPublic
+    expires_at: str
 
 
 class StubResponse(BaseModel):

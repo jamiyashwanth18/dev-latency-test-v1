@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import models  # noqa: F401 -- imported so every table registers on Base.metadata
 from app.config import get_settings
 from app.database import SessionLocal, run_migrations
+from app.routers.sessions import router as sessions_router
 from app.seed import seed_platform_users
 
 settings = get_settings()
@@ -72,3 +73,6 @@ app.add_middleware(
 async def health() -> dict[str, str]:
     """Liveness probe, and the only route here that is not a stub."""
     return {"status": "ok"}
+
+
+app.include_router(sessions_router)
